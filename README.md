@@ -7,3 +7,4 @@ three patterns for speed：
   medium：480 number/s
   high：around 700 number/s 
 screenshot：
+![](screenshot.png)

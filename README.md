@@ -1,6 +1,10 @@
 # subdomain3
 description：a simple and fast tool for bruting subdomains
 
+author:yanxiu
+
+blog:https://www.yanxiuer.com
+
 Python：python3.5+
 
 three patterns for speed：

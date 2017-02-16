@@ -17,6 +17,6 @@ three patterns for speed：
 
 example:pyrhon3 brutedns.py -d target -l 1/2 -s low/medium/high
 
-screenshot(the speed of medium)：
+screenshot(the speed of high)：
 
 ![](screenshot.png)

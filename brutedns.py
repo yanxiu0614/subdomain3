@@ -13,8 +13,10 @@ import logging
 import csv
 from IPy import IP
 import gc
+import os
 import sys
 import argparse
+import platform
 from gevent import monkey
 monkey.patch_all()
 
@@ -62,7 +64,11 @@ class brutedomain:
         self.judge_speed(args.speed)
         self.count = self.get_payload()
         self.found_count=0
+        self.add_ulimit()
 
+    def add_ulimit(self):
+        if(platform.system()=="Linux"):
+            os.system("ulimit -n 65535")
 
     def load_subname(self):
         lists = list()
@@ -199,27 +205,25 @@ class brutedomain:
 
     def raw_write_disk(self):
         self.flag_count = self.flag_count+1
-        csvfile = open('result/{name}.csv'.format(name=self.target_domain), 'a')
-        writer = csv.writer(csvfile)
-        if(self.flag_count == 1):
-            writer.writerow(['domain', 'CDN', 'IP'])
-            for k,v in self.dict_ip.items():
-                try:
-                    tmp = self.dict_cname[k]
-                except:
-                    tmp="No"
-                writer.writerow([k,tmp,self.dict_ip[k]])
-        else:
-            for k,v in self.dict_ip.items():
-                try:
-                    tmp = self.dict_cname[k]
-                except:
-                    tmp="No"
-                writer.writerow([k,tmp,self.dict_ip[k]])
+        with open('result/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            if(self.flag_count == 1):
+                writer.writerow(['domain', 'CDN', 'IP'])
+                for k,v in self.dict_ip.items():
+                    try:
+                        tmp = self.dict_cname[k]
+                    except:
+                        tmp="No"
+                    writer.writerow([k,tmp,self.dict_ip[k]])
+            else:
+                for k,v in self.dict_ip.items():
+                    try:
+                        tmp = self.dict_cname[k]
+                    except:
+                        tmp="No"
+                    writer.writerow([k,tmp,self.dict_ip[k]])
         self.dict_ip.clear()
         self.dict_cname.clear()
-        csvfile.flush()
-        csvfile.close()
 
     def deal_write_disk(self):
         ip_flags = sorted(self.ip_flag.items(), key = lambda d: d[1], reverse = True)
@@ -228,12 +232,6 @@ class brutedomain:
             writer.writerow(['IP', 'frequency'])
             for ip in ip_flags:
                 writer.writerow(ip)
-
-    def main(self):
-        self.run()
-        self.handle_data()
-        self.raw_write_disk()
-        gc.collect()
 
 
 if __name__ == '__main__':
@@ -251,7 +249,10 @@ if __name__ == '__main__':
     while(not brute.queues.empty()):
         i = i + 1
         try:
-            brute.main()
+            brute.run()
+            brute.handle_data()
+            brute.raw_write_disk()
+            gc.collect()
             end = time.time()
             print("percent：%{percent}|found：{found_count} number|speed：{velocity} number/s"
                   .format(percent=round(float(i)/float(brute.count)*100,2),

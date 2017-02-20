@@ -4,7 +4,8 @@
     author:root@yanxiuer.com
     blog(https://www.yanxiuer.com)
 '''
-
+from publicsuffix import PublicSuffixList
+from publicsuffix import fetch
 import dns.resolver
 import time
 import queue
@@ -20,12 +21,12 @@ import platform
 from gevent import monkey
 monkey.patch_all()
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename="brute.log",
-    filemode="a",
-    datefmt='%(asctime)s-%(levelname)s-%(message)s'
-)
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     filename="brute.log",
+#     filemode="a",
+#     datefmt='%(asctime)s-%(levelname)s-%(message)s'
+# )
 
 class brutedomain:
     def __init__(self,args):
@@ -65,6 +66,7 @@ class brutedomain:
         self.count = self.get_payload()
         self.found_count=0
         self.add_ulimit()
+        self.psl=self.get_suffix()
 
     def add_ulimit(self):
         if(platform.system()=="Linux"):
@@ -94,9 +96,14 @@ class brutedomain:
                 sets.add(line)
         return sets
 
+    def get_suffix(self):
+        suffix_list = fetch()
+        psl = PublicSuffixList(suffix_list)
+        return psl
+
+
     def check_cdn(self,cname):
-        tuple_cdn=cname.split(".")
-        cdn_name = "{pre}.{suf}".format(pre=tuple_cdn[-3], suf=tuple_cdn[-2])
+        cdn_name=self.psl.get_public_suffix(cname)
         if cdn_name in self.set_cdn:
             return True
         else:
@@ -193,7 +200,7 @@ class brutedomain:
                     self.dict_ip[keys] = "private address"
                 else:
                     try:
-                        key_yes=self.dict_cname[value]
+                        key_yes=self.dict_cname[keys]
                     except KeyError:
                         key_yes="No"
                     if(key_yes=="No"):

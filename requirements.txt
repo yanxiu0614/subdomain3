@@ -2,3 +2,4 @@ dnspython
 gevent
 argparse
 IPy
+PublicSuffixList

@@ -10,7 +10,6 @@ import dns.resolver
 import time
 import queue
 import gevent.pool
-import logging
 import csv
 from IPy import IP
 import gc
@@ -20,7 +19,7 @@ import argparse
 import platform
 from gevent import monkey
 monkey.patch_all()
-
+# import logging
 # logging.basicConfig(
 #     level=logging.DEBUG,
 #     filename="brute.log",

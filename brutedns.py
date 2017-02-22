@@ -27,7 +27,7 @@ monkey.patch_all()
 #     datefmt='%(asctime)s-%(levelname)s-%(message)s'
 # )
 
-class brutedomain:
+class Brutedomain:
     def __init__(self,args):
         self.target_domain = args.domain
         if not self.target_domain:
@@ -250,7 +250,7 @@ if __name__ == '__main__':
     parser.add_argument("-l", "--level", default=2, type=int,
                         help="example: 1,hello.baidu.com;2,hello.world.baidu.com")
     args = parser.parse_args()
-    brute = brutedomain(args)
+    brute = Brutedomain(args)
     start=time.time()
     i = 0
     while(not brute.queues.empty()):

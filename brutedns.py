@@ -142,7 +142,6 @@ class brutedomain:
                         pass
                     elif item.rdtype == self.get_type_id('NS'):
                         pass
-            self.found_count=self.found_count+1
             del list_ip
             del list_cname
         except dns.resolver.NoAnswer:
@@ -193,23 +192,25 @@ class brutedomain:
                     self.dict_cname[k] = "Yes"
                 else:
                     self.dict_cname[k] = "No"
-
+        invert_dict_ip={str(value):key for key,value in self.dict_ip.items()}
+        self.found_count = self.found_count + invert_dict_ip.__len__()
+        invert_dict_ip={value:key for key,value in invert_dict_ip.items()}
         for keys,values in self.dict_ip.items():
-            for value in values:
-                if(IP(value).iptype() =='PRIVATE'):
-                    self.dict_ip[keys] = "private address"
-                else:
-                    try:
-                        key_yes=self.dict_cname[keys]
-                    except KeyError:
-                        key_yes="No"
-                    if(key_yes=="No"):
-                        CIP = (IP(value).make_net("255.255.255.0"))
-                        if CIP in self.ip_flag:
-                            self.ip_flag[CIP] = self.ip_flag[CIP]+1
-                        else:
-                            self.ip_flag[CIP] = 1
-
+            if(invert_dict_ip.__contains__(keys)):
+                for value in values:
+                    if(IP(value).iptype() =='PRIVATE'):
+                        self.dict_ip[keys] = "private address"
+                    else:
+                        try:
+                            key_yes=self.dict_cname[keys]
+                        except KeyError:
+                            key_yes="No"
+                        if(key_yes=="No"):
+                            CIP = (IP(value).make_net("255.255.255.0"))
+                            if CIP in self.ip_flag:
+                                self.ip_flag[CIP] = self.ip_flag[CIP]+1
+                            else:
+                                self.ip_flag[CIP] = 1
     def raw_write_disk(self):
         self.flag_count = self.flag_count+1
         with open('result/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:

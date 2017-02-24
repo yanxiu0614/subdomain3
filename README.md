@@ -31,3 +31,8 @@ example:pyrhon3 brutedns.py -d target -l 1/2 -s low/medium/high
 screenshot(the speed of high)：
 
 ![](screenshot.png)
+
+----------------------------------------------------------------------------------------
+change log:
+
+2017-2-24: mac support

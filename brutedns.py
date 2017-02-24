@@ -68,7 +68,7 @@ class brutedomain:
         self.psl=self.get_suffix()
 
     def add_ulimit(self):
-        if(platform.system()=="Linux"):
+        if(platform.system()!="Windows"):
             os.system("ulimit -n 65535")
 
     def load_subname(self):
@@ -210,6 +210,8 @@ class brutedomain:
                                 self.ip_flag[CIP] = self.ip_flag[CIP]+1
                             else:
                                 self.ip_flag[CIP] = 1
+
+        self.dict_ip=invert_dict_ip
     def raw_write_disk(self):
         self.flag_count = self.flag_count+1
         with open('result/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:

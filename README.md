@@ -35,4 +35,6 @@ screenshot(the speed of high)：
 ----------------------------------------------------------------------------------------
 change log:
 
+2017-2-16: multilevel domain support(no upper limit);big dict support;take up about a third to a quarter as much memory and faster
+
 2017-2-24: mac support

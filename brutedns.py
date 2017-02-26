@@ -55,6 +55,7 @@ class Brutedomain:
         self.resolver.timeout = 4
         self.set_cdn = self.load_cdn()
         self.queues = queue.Queue()
+        self.get_subname()
         self.dict_cname = dict()
         self.dict_ip = dict()
         self.ip_flag = dict()
@@ -62,30 +63,14 @@ class Brutedomain:
         self.coroutine_num = 10000
         self.segment_num = 10000
         self.judge_speed(args.speed)
-        self.count = self.get_payload()
         self.found_count=0
         self.add_ulimit()
         self.psl=self.get_suffix()
 
+
     def add_ulimit(self):
         if(platform.system()!="Windows"):
             os.system("ulimit -n 65535")
-
-    def load_subname(self):
-        lists = list()
-        with open('dict/wydomain.csv','r') as file_sub:
-            for line in file_sub:
-                line = line.strip()
-                lists.append(line)
-        return lists
-
-    def load_next_sub(self):
-        lists = list()
-        with open('dict/next_sub_full.txt','r') as file_sub:
-            for line in file_sub:
-                line = line.strip()
-                lists.append(line)
-        return lists
 
     def load_cdn(self):
         sets = set()
@@ -152,18 +137,11 @@ class Brutedomain:
         except Exception as e:
             pass
 
-    def get_payload(self):
-        list_subname = self.load_subname()
-        list_next_sub = self.load_next_sub()
-        for subname in list_subname:
-            self.queues.put(subname)
-            if(self.level==2):
-                for next_sub in list_next_sub:
-                    self.queues.put("{sub}.{subname}".format(sub = next_sub,subname = subname))
-        del list_subname
-        del list_next_sub
-        count=((self.queues.qsize()-self.queues.qsize()%(self.segment_num))/self.segment_num)+1
-        return count
+    def get_subname(self):
+        with open('dict/wydomain.csv', 'r') as file_sub:
+            for subname in file_sub:
+                domain = "{sub}.{target_domain}".format(sub=subname.strip(), target_domain=self.target_domain)
+                self.queues.put(domain)
 
     def run(self):
         lists = list()
@@ -175,14 +153,20 @@ class Brutedomain:
                 lists.append(self.queues.get())
         coroutine_pool = gevent.pool.Pool(self.coroutine_num)
         for l in lists:
-            domain = "{sub}.{target_domain}".format(sub=l,target_domain=self.target_domain)
-            coroutine_pool.apply_async(self.query_domain,args=(domain,))
+            coroutine_pool.apply_async(self.query_domain,args=(l,))
         coroutine_pool.join(20)
         coroutine_pool.kill()
         del coroutine_pool
         del lists
 
-
+    def generate_sub(self):
+        for k,v in self.dict_ip.items():
+            if (str(k).count(".")<self.level):
+                file_next_sub = open('dict/next_sub_full.txt', 'r')
+                for next_sub in file_next_sub:
+                    subdomain = "{next}.{domain}".format(next=next_sub.strip(), domain=k)
+                    self.queues.put_nowait(subdomain)
+                file_next_sub.close()
 
     def handle_data(self):
         for k, v in self.dict_cname.items():
@@ -191,9 +175,9 @@ class Brutedomain:
                     self.dict_cname[k] = "Yes"
                 else:
                     self.dict_cname[k] = "No"
-        invert_dict_ip={str(value):key for key,value in self.dict_ip.items()}
-        self.found_count = self.found_count + invert_dict_ip.__len__()
+        invert_dict_ip={str(sorted(value)):key for key,value in self.dict_ip.items()}
         invert_dict_ip={value:key for key,value in invert_dict_ip.items()}
+        self.found_count = self.found_count + invert_dict_ip.__len__()
         for keys,values in self.dict_ip.items():
             if(invert_dict_ip.__contains__(keys)):
                 for value in values:
@@ -212,6 +196,7 @@ class Brutedomain:
                                 self.ip_flag[CIP] = 1
 
         self.dict_ip=invert_dict_ip
+
     def raw_write_disk(self):
         self.flag_count = self.flag_count+1
         with open('result/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:
@@ -258,13 +243,17 @@ if __name__ == '__main__':
     while(not brute.queues.empty()):
         i = i + 1
         try:
+            wait_size = brute.queues.qsize()
             brute.run()
             brute.handle_data()
+            brute.generate_sub()
             brute.raw_write_disk()
             gc.collect()
             end = time.time()
-            print("percent：%{percent}|found：{found_count} number|speed：{velocity} number/s"
-                  .format(percent=round(float(i)/float(brute.count)*100,2),
+            print("*******************************************************")
+            print(
+                "found：{found_count} number|speed：{velocity} number|waiting：{qsize} number|"
+                  .format(qsize=wait_size,
                           found_count=brute.found_count,
                           velocity=round(brute.segment_num*i/(end-start),2)))
         except KeyboardInterrupt:

@@ -48,4 +48,3 @@ aliyuncs.com
 aliyun-inc.com
 cdn.dnsv1.com
 cdntip.com
-tcdn.qq.com

@@ -30,7 +30,7 @@ usage:
 
 example:pyrhon3 brutedns.py -d target -l 1/2 -s low/medium/high
 
-screenshot(the speed of high)：
+screenshot(the speed of medium)：
 
 ![](screenshot.png)
 

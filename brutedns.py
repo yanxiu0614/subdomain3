@@ -30,8 +30,8 @@ monkey.patch_all()
 class Brutedomain:
     def __init__(self,args):
         self.target_domain = args.domain
-        if not self.target_domain:
-            print('usage: brutedns.py -d baidu.com -s low/medium/high')
+        if not (self.target_domain):
+            print('usage: brutedns.py -d/-f baidu.com/domains.txt -s low/medium/high')
             sys.exit(1)
         self.level = args.level
         self.resolver = dns.resolver.Resolver()
@@ -66,7 +66,6 @@ class Brutedomain:
         self.found_count=0
         self.add_ulimit()
         self.psl=self.get_suffix()
-
 
     def add_ulimit(self):
         if(platform.system()!="Windows"):
@@ -236,27 +235,41 @@ if __name__ == '__main__':
                         help="domain name,for example:baidu.com")
     parser.add_argument("-l", "--level", default=2, type=int,
                         help="example: 1,hello.baidu.com;2,hello.world.baidu.com")
+    parser.add_argument("-f", "--file",
+                        help="The list of domain")
     args = parser.parse_args()
-    brute = Brutedomain(args)
-    start=time.time()
-    i = 0
-    while(not brute.queues.empty()):
-        i = i + 1
-        try:
-            wait_size = brute.queues.qsize()
-            brute.run()
-            brute.handle_data()
-            brute.generate_sub()
-            brute.raw_write_disk()
-            gc.collect()
-            end = time.time()
-            print("*******************************************************")
-            print(
-                "found：{found_count} number|speed：{velocity} number|waiting：{qsize} number|"
-                  .format(qsize=wait_size,
-                          found_count=brute.found_count,
-                          velocity=round(brute.segment_num*i/(end-start),2)))
-        except KeyboardInterrupt:
-            print("stop")
-            sys.exit(1)
-    brute.deal_write_disk()
+    file_name=args.file
+    sets_domain = set()
+    if file_name:
+        with open(file_name, 'r') as file_domain:
+            for line in file_domain:
+                sets_domain.add(line.strip())
+    else:
+        sets_domain.add(args.domain)
+    for domain in sets_domain:
+        args.domain=domain
+        brute = Brutedomain(args)
+        start=time.time()
+        i = 0
+        print("*****************************Begin*******************************")
+        while(not brute.queues.empty()):
+            i = i + 1
+            try:
+                brute.run()
+                brute.handle_data()
+                brute.generate_sub()
+                brute.raw_write_disk()
+                wait_size = brute.queues.qsize()
+                gc.collect()
+                end = time.time()
+                print(
+                    "domain: {domain} |found：{found_count} number|speed：{velocity} number/s|waiting：{qsize} number|"
+                      .format(domain=domain,
+                              qsize=wait_size,
+                              found_count=brute.found_count,
+                              velocity=round(brute.segment_num*i/(end-start),2)))
+            except KeyboardInterrupt:
+                print("stop")
+                sys.exit(1)
+        brute.deal_write_disk()
+        print("*****************************Over********************************")

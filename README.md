@@ -24,6 +24,8 @@ usage:
                             domain name,for example:baidu.com
       -l LEVEL, --level LEVEL
                             example: 1,hello.baidu.com;2,hello.world.baidu.com
+      -f FILE,  --file FILE
+                            The list of domain
 
 
 example:pyrhon3 brutedns.py -d target -l 1/2 -s low/medium/high
@@ -34,6 +36,7 @@ screenshot(the speed of high)：
 
 ----------------------------------------------------------------------------------------
 change log:
+
 2017-3-10: read several domains from file support(-f domains);update cdn-servers
 
 2017-2-26: multilevel domain support(no upper limit);big dict support;take up about a third to a quarter as much memory; faster

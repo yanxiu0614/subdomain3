@@ -60,6 +60,7 @@ class Brutedomain:
         self.dict_ip = dict()
         self.ip_flag = dict()
         self.flag_count = 0
+        self.queue_sub=queue.Queue()
         self.coroutine_num = 10000
         self.segment_num = 10000
         self.judge_speed(args.speed)
@@ -159,16 +160,20 @@ class Brutedomain:
         del lists
 
     def generate_sub(self):
-        for k,v in self.dict_ip.items():
-            if (str(k).count(".")<self.level):
-                file_next_sub = open('dict/next_sub_full.txt', 'r')
+        try:
+            domain=self.queue_sub.get_nowait()
+            print(domain)
+            with open('dict/next_sub_full.txt', 'r') as file_next_sub:
                 for next_sub in file_next_sub:
-                    subdomain = "{next}.{domain}".format(next=next_sub.strip(), domain=k)
+                    subdomain = "{next}.{domain}".format(next=next_sub.strip(), domain=domain)
                     self.queues.put_nowait(subdomain)
-                file_next_sub.close()
+        except Exception:
+            pass
 
     def handle_data(self):
         for k, v in self.dict_cname.items():
+            if (str(k).count(".") < self.level):
+                self.queue_sub.put(str(k))
             for c in v:
                 if(self.check_cdn(c)):
                     self.dict_cname[k] = "Yes"
@@ -257,9 +262,10 @@ if __name__ == '__main__':
             try:
                 brute.run()
                 brute.handle_data()
-                brute.generate_sub()
                 brute.raw_write_disk()
                 wait_size = brute.queues.qsize()
+                if (wait_size < 50000):
+                    brute.generate_sub()
                 gc.collect()
                 end = time.time()
                 print(

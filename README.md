@@ -23,7 +23,7 @@ usage:
       -d DOMAIN, --domain DOMAIN
                             domain name,for example:baidu.com
       -l LEVEL, --level LEVEL
-                            example: 1,hello.baidu.com;2,hello.world.baidu.com
+                            example: 1,baidu.com;2,world.baidu.com;3,hello.world.baidu.com
       -f FILE,  --file FILE
                             The list of domain
 
@@ -36,6 +36,8 @@ screenshot(the speed of medium)：
 
 ----------------------------------------------------------------------------------------
 change log:
+
+2017-3-17: big dict support(for example:200 million)
 
 2017-3-10: read several domains from file support(-f domains);update cdn-servers
 

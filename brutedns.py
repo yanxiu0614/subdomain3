@@ -167,8 +167,9 @@ class Brutedomain:
                 for next_sub in file_next_sub:
                     subdomain = "{next}.{domain}".format(next=next_sub.strip(), domain=domain)
                     self.queues.put_nowait(subdomain)
+            return True
         except Exception:
-            pass
+            return False
 
     def handle_data(self):
         for k, v in self.dict_cname.items():
@@ -265,7 +266,8 @@ if __name__ == '__main__':
                 brute.raw_write_disk()
                 wait_size = brute.queues.qsize()
                 while (wait_size < 50000):
-                    brute.generate_sub()
+                    if(not brute.generate_sub()):
+                        break
                 gc.collect()
                 end = time.time()
                 print(

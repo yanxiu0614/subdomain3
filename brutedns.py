@@ -186,7 +186,7 @@ class Brutedomain:
             if(invert_dict_ip.__contains__(keys)):
                 for value in values:
                     if(IP(value).iptype() =='PRIVATE'):
-                        self.dict_ip[keys] = "private address"
+                        invert_dict_ip[keys] = "private({ip})".format(ip=value)
                     else:
                         try:
                             key_yes=self.dict_cname[keys]

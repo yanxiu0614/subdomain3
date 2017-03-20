@@ -264,7 +264,7 @@ if __name__ == '__main__':
                 brute.handle_data()
                 brute.raw_write_disk()
                 wait_size = brute.queues.qsize()
-                if (wait_size < 50000):
+                while (wait_size < 50000):
                     brute.generate_sub()
                 gc.collect()
                 end = time.time()

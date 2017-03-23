@@ -37,6 +37,8 @@ screenshot(the speed of medium)：
 ----------------------------------------------------------------------------------------
 change log:
 
+2017-3-23:add universal parse opthon(-p t/f)
+
 2017-3-17: big dict support(for example:200 million)
 
 2017-3-10: read several domains from file support(-f domains);update cdn-servers

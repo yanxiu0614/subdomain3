@@ -34,6 +34,7 @@ class Brutedomain:
             print('usage: brutedns.py -d/-f baidu.com/domains.txt -s low/medium/high')
             sys.exit(1)
         self.level = args.level
+        self.parse = args.parse
         self.resolver = dns.resolver.Resolver()
         self.resolver.nameservers = [
             '114.114.114.114',
@@ -173,18 +174,26 @@ class Brutedomain:
 
     def handle_data(self):
         for k, v in self.dict_cname.items():
-            if (str(k).count(".") < self.level):
-                self.queue_sub.put(str(k))
             for c in v:
                 if(self.check_cdn(c)):
                     self.dict_cname[k] = "Yes"
                 else:
                     self.dict_cname[k] = "No"
-        invert_dict_ip={str(sorted(value)):key for key,value in self.dict_ip.items()}
-        invert_dict_ip={value:key for key,value in invert_dict_ip.items()}
-        self.found_count = self.found_count + invert_dict_ip.__len__()
+
+        if(self.parse=='t'):
+            invert_dict_ip={str(sorted(value)):key for key,value in self.dict_ip.items()}
+            invert_dict_ip={value:key for key,value in invert_dict_ip.items()}
+            self.found_count = self.found_count + invert_dict_ip.__len__()
+        else:
+            self.found_count = self.found_count +self.dict_ip.__len__()
+            invert_dict_ip=self.dict_ip
+
         for keys,values in self.dict_ip.items():
-            if(invert_dict_ip.__contains__(keys)):
+            if (str(keys).count(".") < self.level):
+                self.queue_sub.put(str(keys))
+            if(not invert_dict_ip.__contains__(keys)):
+                pass
+            else:
                 for value in values:
                     if(IP(value).iptype() =='PRIVATE'):
                         invert_dict_ip[keys] = "private({ip})".format(ip=value)
@@ -243,6 +252,9 @@ if __name__ == '__main__':
                         help="example: 1,hello.baidu.com;2,hello.world.baidu.com")
     parser.add_argument("-f", "--file",
                         help="The list of domain")
+    parser.add_argument("-p", "--parse",
+                        help="universal parsing,t or f")
+
     args = parser.parse_args()
     file_name=args.file
     sets_domain = set()
@@ -265,7 +277,7 @@ if __name__ == '__main__':
                 brute.handle_data()
                 brute.raw_write_disk()
                 wait_size = brute.queues.qsize()
-                while (wait_size < 50000):
+                while (brute.queues.qsize() < 30000):
                     if(not brute.generate_sub()):
                         break
                 gc.collect()

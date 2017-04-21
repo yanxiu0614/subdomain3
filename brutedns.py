@@ -163,14 +163,22 @@ class Brutedomain:
     def generate_sub(self):
         try:
             domain=self.queue_sub.get_nowait()
-            print(domain)
             with open('dict/next_sub_full.txt', 'r') as file_next_sub:
                 for next_sub in file_next_sub:
                     subdomain = "{next}.{domain}".format(next=next_sub.strip(), domain=domain)
                     self.queues.put_nowait(subdomain)
-            return True
-        except Exception:
+                return True
+        except Exception as e:
+            print(e)
             return False
+
+    def set_dynamic_num(self):
+        if(args.level=="high"):
+            return 350000
+        elif(args.level=="low"):
+            return 150000
+        else:
+            return 250000
 
     def handle_data(self):
         for k, v in self.dict_cname.items():
@@ -277,9 +285,10 @@ if __name__ == '__main__':
                 brute.handle_data()
                 brute.raw_write_disk()
                 wait_size = brute.queues.qsize()
-                while (brute.queues.qsize() < 30000):
-                    if(not brute.generate_sub()):
-                        break
+                if(brute.queues.qsize() < 30000):
+                    while(brute.queues.qsize()<brute.set_dynamic_num()):
+                        if(not brute.generate_sub()):
+                            break
                 gc.collect()
                 end = time.time()
                 print(

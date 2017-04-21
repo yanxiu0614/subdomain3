@@ -26,6 +26,8 @@ usage:
                             example: 1,baidu.com;2,world.baidu.com;3,hello.world.baidu.com
       -f FILE,  --file FILE
                             The list of domain
+      -p PARSE  --parse PARSE
+                            universal parsing,t or f
 
 
 example:pyrhon3 brutedns.py -d target -l 1/2 -s low/medium/high
@@ -37,7 +39,9 @@ screenshot(the speed of medium)：
 ----------------------------------------------------------------------------------------
 change log:
 
-2017-3-23:add universal parse opthon(-p t/f)
+2017-4-21：optimze strategy for generating subname，improve the speed
+
+2017-3-23: add universal parse opthon(-p t/f)
 
 2017-3-17: big dict support(for example:200 million)
 

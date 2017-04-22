@@ -285,7 +285,6 @@ if __name__ == '__main__':
                 brute.raw_write_disk()
                 if(brute.queues.qsize() < 30000):
                     while(brute.queues.qsize()<brute.set_dynamic_num()):
-                        print(brute.queues.qsize())
                         if(not brute.generate_sub()):
                             break
                 gc.collect()

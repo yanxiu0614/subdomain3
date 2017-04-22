@@ -7,7 +7,7 @@ email: root@yanxiuer.com
 
 blog: https://www.yanxiuer.com
 
-Python：python3.5+
+Python: python3.5+
 
 three patterns for speed：
 

@@ -297,7 +297,7 @@ if __name__ == '__main__':
                               found_count=brute.found_count,
                               velocity=round(brute.segment_num*i/(end-start),2)))
             except KeyboardInterrupt:
-                print("stop")
+                print("user stop")
                 sys.exit(1)
         brute.deal_write_disk()
         print("*****************************Over********************************")

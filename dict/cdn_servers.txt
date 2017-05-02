@@ -57,3 +57,5 @@ alicdn.com
 cdn20.info
 acadn.com
 fastcdn.com
+tcdn.qq.com
+dayugslb.com

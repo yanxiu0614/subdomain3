@@ -180,12 +180,20 @@ class Brutedomain:
             return 250000
 
     def handle_data(self):
+        temp_list=list()
         for k, v in self.dict_cname.items():
             for c in v:
                 if(self.check_cdn(c)):
                     self.dict_cname[k] = "Yes"
                 else:
                     self.dict_cname[k] = "No"
+
+        for k, v in self.dict_ip.items():
+            if(v[0]=='222.221.5.252' or v[0]=='222.221.5.253' or v[0]=='1.1.1.1'):
+                temp_list.append(k)
+
+        for key in temp_list:
+            del self.dict_ip[key]
 
         if(self.parse=='t'):
             invert_dict_ip={str(sorted(value)):key for key,value in self.dict_ip.items()}

@@ -43,6 +43,8 @@ screenshot(the speed of medium)：
 ----------------------------------------------------------------------------------------
 change log:
 
+2017-5-2:add a module(validate the domain),please modify "result_name" in the validate_domain.py if you will use it;fix universal bug;update cdn-servers,etc
+
 2017-4-21：optimze strategy for generating subname，improve the speed
 
 2017-3-23:add universal parse opthon(-p t/f)

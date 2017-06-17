@@ -28,8 +28,6 @@ usage:
                             example: 1,baidu.com;2,world.baidu.com;3,hello.world.baidu.com
       -f FILE,  --file FILE
                             The list of domain
-      -p PARSE,  --parse PARSE
-                            universal parsing,t or f
                             
       
 
@@ -43,11 +41,13 @@ screenshot(the speed of medium)：
 ----------------------------------------------------------------------------------------
 change log:
 
-2017-5-2:add a module(validate the domain),please modify "result_name" in the validate_domain.py if you will use it;fix universal bug;update cdn-servers,etc
+2017-6-17: delete universal parse opthon(-p t/f);add a file of config;optimze strategy for universal parse 
 
-2017-4-21：optimze strategy for generating subname，improve the speed
+2017-5-2: add a module(validate the domain),please modify "result_name" in the validate_domain.py if you will use it;fix universal bug;update cdn-servers,etc
 
-2017-3-23:add universal parse opthon(-p t/f)
+2017-4-21: optimze strategy for generating subname，improve the speed
+
+2017-3-23: add universal parse opthon(-p t/f)
 
 2017-3-17: big dict support(for example:200 million)
 

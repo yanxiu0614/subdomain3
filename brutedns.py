@@ -17,6 +17,7 @@ import os
 import sys
 import argparse
 import platform
+import lib.config as config
 from gevent import monkey
 monkey.patch_all()
 # import logging
@@ -34,7 +35,6 @@ class Brutedomain:
             print('usage: brutedns.py -d/-f baidu.com/domains.txt -s low/medium/high')
             sys.exit(1)
         self.level = args.level
-        self.parse = args.parse
         self.resolver = dns.resolver.Resolver()
         self.resolver.nameservers = [
             '114.114.114.114',
@@ -68,6 +68,7 @@ class Brutedomain:
         self.found_count=0
         self.add_ulimit()
         self.psl=self.get_suffix()
+        self.dict_ip_count = {}
 
     def add_ulimit(self):
         if(platform.system()!="Windows"):
@@ -98,15 +99,15 @@ class Brutedomain:
         return dns.rdatatype.from_text(name)
 
     def judge_speed(self,speed):
-        if(speed == "low"):
-            self.coroutine_num = 1000
-            self.segment_num = 7000
-        elif(speed =="high"):
-            self.coroutine_num == 2500
-            self.segment_num = 20000
+        if (speed == "low"):
+            self.coroutine_num = config.low_coroutine_num
+            self.segment_num = config.low_segment_num
+        elif (speed == "high"):
+            self.coroutine_num == config.high_coroutine_num
+            self.segment_num = config.high_segment_num
         else:
-            self.coroutine_num =1500
-            self.segment_num = 10000
+            self.coroutine_num = config.medium_coroutine_num
+            self.segment_num = config.high_segment_num
 
     def query_domain(self,domain):
         list_ip=list()
@@ -188,43 +189,46 @@ class Brutedomain:
                 else:
                     self.dict_cname[k] = "No"
 
-        for k, v in self.dict_ip.items():
-            if(v[0]=='222.221.5.252' or v[0]=='222.221.5.253' or v[0]=='1.1.1.1'):
-                temp_list.append(k)
+        for name,ip_list in self.dict_ip.items():
+            ip_str=str(sorted(ip_list))
+            if (self.dict_ip_count.__contains__(ip_str)):
+                if(self.dict_ip_count[ip_str]>config.ip_max_count):
+                    temp_list.append(name)
+                else:
+                    self.dict_ip_count[ip_str] = self.dict_ip_count[ip_str] + 1
+            else:
+                self.dict_ip_count[ip_str] = 1
+            for filter_ip in config.waiting_fliter_ip:
+                if (filter_ip in ip_list):
+                    temp_list.append(name)
 
-        for key in temp_list:
-            del self.dict_ip[key]
+        for name in temp_list:
+            try:
+                del self.dict_ip[name]
+            except Exception:
+                pass
+        self.found_count = self.found_count +self.dict_ip.__len__()
+        invert_dict_ip = self.dict_ip
 
-        if(self.parse=='t'):
-            invert_dict_ip={str(sorted(value)):key for key,value in self.dict_ip.items()}
-            invert_dict_ip={value:key for key,value in invert_dict_ip.items()}
-            self.found_count = self.found_count + invert_dict_ip.__len__()
-        else:
-            self.found_count = self.found_count +self.dict_ip.__len__()
-            invert_dict_ip=self.dict_ip
-
-        for keys,values in self.dict_ip.items():
+        for keys, values in self.dict_ip.items():
             if (str(keys).count(".") < self.level):
                 self.queue_sub.put(str(keys))
-            if(not invert_dict_ip.__contains__(keys)):
-                pass
-            else:
+            if (invert_dict_ip.__contains__(keys)):
                 for value in values:
-                    if(IP(value).iptype() =='PRIVATE'):
+                    if (IP(value).iptype() == 'PRIVATE'):
                         invert_dict_ip[keys] = "private({ip})".format(ip=value)
                     else:
                         try:
-                            key_yes=self.dict_cname[keys]
+                            key_yes = self.dict_cname[keys]
                         except KeyError:
-                            key_yes="No"
-                        if(key_yes=="No"):
+                            key_yes = "No"
+                        if (key_yes == "No"):
                             CIP = (IP(value).make_net("255.255.255.0"))
                             if CIP in self.ip_flag:
-                                self.ip_flag[CIP] = self.ip_flag[CIP]+1
+                                self.ip_flag[CIP] = self.ip_flag[CIP] + 1
                             else:
                                 self.ip_flag[CIP] = 1
 
-        self.dict_ip=invert_dict_ip
 
     def raw_write_disk(self):
         self.flag_count = self.flag_count+1
@@ -267,8 +271,6 @@ if __name__ == '__main__':
                         help="example: 1,hello.baidu.com;2,hello.world.baidu.com")
     parser.add_argument("-f", "--file",
                         help="The list of domain")
-    parser.add_argument("-p", "--parse",
-                        help="universal parsing,t or f")
 
     args = parser.parse_args()
     file_name=args.file

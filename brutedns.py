@@ -4,20 +4,19 @@
     author:root@yanxiuer.com
     blog(https://www.yanxiuer.com)
 '''
-from publicsuffix import PublicSuffixList
-from publicsuffix import fetch
-import dns.resolver
+# std lib
 import time
 import queue
-import gevent.pool
 import csv
-from IPy import IP
-import gc
 import os
 import sys
 import argparse
 import platform
-import lib.config as config
+import gc
+
+#third-party lib
+import dns.resolver
+import gevent.pool
 from gevent import monkey
 monkey.patch_all()
 # import logging
@@ -27,6 +26,12 @@ monkey.patch_all()
 #     filemode="a",
 #     datefmt='%(asctime)s-%(levelname)s-%(message)s'
 # )
+
+#private-lib
+import lib.config as config
+from IPy import IP
+from publicsuffix import PublicSuffixList
+from publicsuffix import fetch
 
 class Brutedomain:
     def __init__(self,args):

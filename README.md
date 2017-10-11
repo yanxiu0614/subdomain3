@@ -11,16 +11,22 @@ medium pattern for speed
 
 ## Features
 * More quick
+
 Three patterns for speed. User can modify the configuration(/lib/config.py) file to speed-up.
 * CDN support
+
 Determines whether the subdomain  uses CDN storage by searching list of CDN severs.
 * RFC CIDR
+
 Sorting ip and report CIDR(example 1.1.1.1/24)
 * Multi-level subdomain support
+
 Discover more subdomains,example:admin.test.xx.com
 * Big dict support
+
 Million of subs support
 * Less resource consumption
+
 1 CPU/1GB Memory/1Mbps bandwidth
 
 ## Getting started

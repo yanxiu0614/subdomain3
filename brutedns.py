@@ -2,24 +2,29 @@
 # -*- encoding: utf-8 -*-
 '''
     author:root@yanxiuer.com
-    blog(https://www.yanxiuer.com)
 '''
+import sys
+import platform
+import time
+if sys.version>'3':
+    from queue import Queue
+else:
+    from Queue import Queue
+import csv
+import gc
+import os
+
+import argparse
 from publicsuffix import PublicSuffixList
 from publicsuffix import fetch
 import dns.resolver
-import time
-import queue
-import gevent.pool
-import csv
 from IPy import IP
-import gc
-import os
-import sys
-import argparse
-import platform
-import lib.config as config
+import gevent
 from gevent import monkey
 monkey.patch_all()
+
+import lib.config as config
+
 # import logging
 # logging.basicConfig(
 #     level=logging.DEBUG,
@@ -55,38 +60,46 @@ class Brutedomain:
             '8.8.4.4']
         self.resolver.timeout = 4
         self.set_cdn = self.load_cdn()
-        self.queues = queue.Queue()
+        self.queues = Queue()
         self.get_subname()
         self.dict_cname = dict()
         self.dict_ip = dict()
         self.ip_flag = dict()
         self.flag_count = 0
-        self.queue_sub=queue.Queue()
-        self.coroutine_num = 10000
-        self.segment_num = 10000
-        self.judge_speed(args.speed)
+        self.queue_sub=Queue()
+        self.active_ip_dict = dict()
+        self.segment_num = self.judge_speed(args.speed)
         self.found_count=0
         self.add_ulimit()
         self.psl=self.get_suffix()
-        self.dict_ip_count = {}
+        self.dict_ip_count =dict()
 
     def add_ulimit(self):
         if(platform.system()!="Windows"):
             os.system("ulimit -n 65535")
 
     def load_cdn(self):
-        sets = set()
+        cdn_set = set()
         with open('dict/cdn_servers.txt','r') as file_cdn:
             for line in file_cdn:
-                line = line.strip()
-                sets.add(line)
-        return sets
+                cdn_set.add(line.strip())
+        return cdn_set
 
     def get_suffix(self):
         suffix_list = fetch()
         psl = PublicSuffixList(suffix_list)
         return psl
 
+    def get_target_domain(self):
+        file_name = args.file
+        sets_domain = set()
+        if file_name:
+            with open(file_name, 'r') as file_domain:
+                for line in file_domain:
+                    sets_domain.add(line.strip())
+        else:
+            sets_domain.add(args.domain)
+        return sets_domain
 
     def check_cdn(self,cname):
         cdn_name=self.psl.get_public_suffix(cname)
@@ -100,18 +113,15 @@ class Brutedomain:
 
     def judge_speed(self,speed):
         if (speed == "low"):
-            self.coroutine_num = config.low_coroutine_num
-            self.segment_num = config.low_segment_num
+            segment_num = config.low_segment_num
         elif (speed == "high"):
-            self.coroutine_num == config.high_coroutine_num
-            self.segment_num = config.high_segment_num
+            segment_num = config.high_segment_num
         else:
-            self.coroutine_num = config.medium_coroutine_num
-            self.segment_num = config.high_segment_num
+            segment_num = config.medium_segment_num
+        return segment_num
 
     def query_domain(self,domain):
-        list_ip=list()
-        list_cname=list()
+        list_ip,list_cname=[],[]
         try:
             record = self.resolver.query(domain)
             for A_CNAME in record.response.answer:
@@ -130,36 +140,25 @@ class Brutedomain:
                         pass
             del list_ip
             del list_cname
-        except dns.resolver.NoAnswer:
-            pass
-        except dns.resolver.NXDOMAIN:
-            pass
-        except dns.resolver.Timeout:
-            pass
         except Exception as e:
             pass
 
     def get_subname(self):
         with open('dict/wydomain.csv', 'r') as file_sub:
-            for subname in file_sub:
-                domain = "{sub}.{target_domain}".format(sub=subname.strip(), target_domain=self.target_domain)
+            for sub in file_sub:
+                domain = "{sub}.{target_domain}".format(sub=sub.strip(), target_domain=self.target_domain)
                 self.queues.put(domain)
 
-    def run(self):
-        lists = list()
+    def get_block(self):
+        domain_list = list()
         if (self.queues.qsize() > self.segment_num):
             for num in range(self.segment_num):
-                lists.append(self.queues.get())
+                domain_list.append(self.queues.get())
         else:
             for num in range(self.queues.qsize()):
-                lists.append(self.queues.get())
-        coroutine_pool = gevent.pool.Pool(self.coroutine_num)
-        for l in lists:
-            coroutine_pool.apply_async(self.query_domain,args=(l,))
-        coroutine_pool.join(20)
-        coroutine_pool.kill()
-        del coroutine_pool
-        del lists
+                domain_list.append(self.queues.get())
+        return domain_list
+
 
     def generate_sub(self):
         try:
@@ -182,87 +181,133 @@ class Brutedomain:
 
     def handle_data(self):
         temp_list=list()
-        for k, v in self.dict_cname.items():
-            for c in v:
-                if(self.check_cdn(c)):
-                    self.dict_cname[k] = "Yes"
+        for subdomain, cname_list in self.dict_cname.items():
+            for cname in cname_list:
+                if(self.check_cdn(cname)):
+                    self.dict_cname[subdomain] = "Yes"
                 else:
-                    self.dict_cname[k] = "No"
+                    self.dict_cname[subdomain] = "No"
 
-        for name,ip_list in self.dict_ip.items():
+        for subdomain,ip_list in self.dict_ip.items():
             ip_str=str(sorted(ip_list))
             if (self.dict_ip_count.__contains__(ip_str)):
                 if(self.dict_ip_count[ip_str]>config.ip_max_count):
-                    temp_list.append(name)
+                    temp_list.append(subdomain)
                 else:
                     self.dict_ip_count[ip_str] = self.dict_ip_count[ip_str] + 1
             else:
                 self.dict_ip_count[ip_str] = 1
-            for filter_ip in config.waiting_fliter_ip:
-                if (filter_ip in ip_list):
-                    temp_list.append(name)
 
-        for name in temp_list:
+            for filter_ip in config.waiting_fliter_ip:
+                if (filter_ip in ip_str):
+                    temp_list.append(subdomain)
+
+        for subdomain in temp_list:
             try:
-                del self.dict_ip[name]
+                del self.dict_ip[subdomain]
+                del self.dict_cname[subdomain]
             except Exception:
                 pass
-        self.found_count = self.found_count +self.dict_ip.__len__()
-        invert_dict_ip = self.dict_ip
 
-        for keys, values in self.dict_ip.items():
-            if (str(keys).count(".") < self.level):
-                self.queue_sub.put(str(keys))
-            if (invert_dict_ip.__contains__(keys)):
-                for value in values:
-                    if (IP(value).iptype() == 'PRIVATE'):
-                        invert_dict_ip[keys] = "private({ip})".format(ip=value)
-                    else:
-                        try:
-                            key_yes = self.dict_cname[keys]
-                        except KeyError:
-                            key_yes = "No"
-                        if (key_yes == "No"):
-                            CIP = (IP(value).make_net("255.255.255.0"))
-                            if CIP in self.ip_flag:
-                                self.ip_flag[CIP] = self.ip_flag[CIP] + 1
-                            else:
-                                self.ip_flag[CIP] = 1
+        self.found_count = self.found_count +self.dict_ip.__len__()
+       # invert_dict_ip = copy.deepcopy(self.dict_ip)
+
+        for subdomain, ip_list in self.dict_ip.items():
+            if (str(subdomain).count(".") < self.level):
+                self.queue_sub.put(str(subdomain))
+            for ip in ip_list:
+                if (IP(ip).iptype() == 'PRIVATE'):
+                    self.dict_ip[subdomain] = "private({ip})".format(ip=ip)
+                else:
+                    try:
+                        key_yes = self.dict_cname[subdomain]
+                    except KeyError:
+                        key_yes = "No"
+                    if (key_yes == "No"):
+                        CIP = (IP(ip).make_net("255.255.255.0"))
+                        if CIP in self.ip_flag:
+                            self.ip_flag[CIP] = self.ip_flag[CIP] + 1
+                        else:
+                            self.ip_flag[CIP] = 1
+
+                        if CIP in self.active_ip_dict:
+                            active_ip_list = self.active_ip_dict[CIP]
+                            if (ip not in active_ip_list):
+                                active_ip_list.append(ip)
+                                self.active_ip_dict[CIP] = active_ip_list
+                        else:
+                            active_ip_list = []
+                            active_ip_list.append(ip)
+                            self.active_ip_dict[CIP] = active_ip_list
+
 
 
     def raw_write_disk(self):
         self.flag_count = self.flag_count+1
-        with open('result/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:
+        if( not os.path.exists('result/{domain}'.format(domain=self.target_domain))):
+            os.mkdir('result/{domain}'.format(domain=self.target_domain))
+        with open('result/{name}/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:
             writer = csv.writer(csvfile)
             if(self.flag_count == 1):
                 writer.writerow(['domain', 'CDN', 'IP'])
-                for k,v in self.dict_ip.items():
+                for subdomain,ip_list in self.dict_ip.items():
                     try:
-                        tmp = self.dict_cname[k]
+                        flag = self.dict_cname[subdomain]
                     except:
-                        tmp="No"
-                    writer.writerow([k,tmp,self.dict_ip[k]])
+                        flag="No"
+                    writer.writerow([subdomain,flag,ip_list])
             else:
-                for k,v in self.dict_ip.items():
+                for subdomain,ip_list in self.dict_ip.items():
                     try:
-                        tmp = self.dict_cname[k]
+                        flag = self.dict_cname[subdomain]
                     except:
-                        tmp="No"
-                    writer.writerow([k,tmp,self.dict_ip[k]])
+                        flag="No"
+                    writer.writerow([subdomain,flag,ip_list])
         self.dict_ip.clear()
         self.dict_cname.clear()
 
     def deal_write_disk(self):
+        if( not os.path.exists('result/{domain}'.format(domain=self.target_domain))):
+            os.mkdir('result/{domain}'.format(domain=self.target_domain))
         ip_flags = sorted(self.ip_flag.items(), key = lambda d: d[1], reverse = True)
-        with open('result/deal_{name}.csv'.format(name = self.target_domain), 'a') as csvfile:
+        with open('result/{name}/deal_{name}.csv'.format(name = self.target_domain), 'a') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['IP', 'frequency'])
-            for ip in ip_flags:
-                writer.writerow(ip)
+            writer.writerow(['IP', 'frequency', 'active'])
+            for ip_frequency in ip_flags:
+                writer.writerow([ip_frequency[0], ip_frequency[1], self.active_ip_dict[ip_frequency[0]]])
 
+    def cmd_print(self,wait_size,start,end,i):
+        print("domain: {domain} |found：{found_count} number|speed：{velocity} number/s|waiting：{qsize} number|"
+                      .format(domain=self.target_domain,
+                              qsize=wait_size,
+                              found_count=self.found_count,
+                              velocity=round(self.segment_num*i/(end-start),2)))
+
+    def run(self):
+            start=time.time()
+            print("*****************************Begin*******************************")
+            i=0
+            while not self.queues.empty():
+                i=i+1
+                domain_list=self.get_block()
+                coroutines = [gevent.spawn(self.query_domain, l) for l in domain_list]
+                try:
+                    gevent.joinall(coroutines)
+                except  KeyboardInterrupt:
+                    print('user stop')
+                    sys.exit(1)
+                self.handle_data()
+                self.cmd_print(self.queues.qsize(), start, time.time(), i)
+                self.raw_write_disk()
+                gc.collect()
+                if (self.queues.qsize() < 30000):
+                    while (self.queues.qsize() < self.set_dynamic_num()):
+                        if not self.generate_sub(): break
+            self.deal_write_disk()
+            print("*****************************Over********************************")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='A simple and fast tool for bruting subdomains,version=1.0')
+    parser = argparse.ArgumentParser(description='A new generation of tool for discovering subdomains( ip , cdn and so on),version=２.0')
     parser.add_argument('-s','--speed',default="medium",
                         help='low,medium and high')
     parser.add_argument("-d", "--domain",
@@ -271,6 +316,27 @@ if __name__ == '__main__':
                         help="example: 1,hello.baidu.com;2,hello.world.baidu.com")
     parser.add_argument("-f", "--file",
                         help="The list of domain")
+
+
+    def brute_subdomain_api(domain,speed,level):
+        cmd_args = parser.parse_args()
+        cmd_args.domain=domain
+        cmd_args.speed=speed
+        cmd_args.level=level
+        brute = Brutedomain(cmd_args)
+        brute.run()
+
+
+    def banner():
+        print("""
+                  _         _                       _       ____  
+                 | |       | |                     (_)     |___ \ 
+        ___ _   _| |__   __| | ___  _ __ ___   __ _ _ _ __   __) |
+       / __| | | | '_ \ / _` |/ _ \| '_ ` _ \ / _` | | '_ \ |__ < 
+       \__ \ |_| | |_) | (_| | (_) | | | | | | (_| | | | | |___) |
+       |___/\__,_|_.__/ \__,_|\___/|_| |_| |_|\__,_|_|_| |_|____/ 
+        　 　Coded By 彦修 (V2.0 RELEASE) email:root@yanxiuer.com
+        """)
 
     args = parser.parse_args()
     file_name=args.file
@@ -281,33 +347,12 @@ if __name__ == '__main__':
                 sets_domain.add(line.strip())
     else:
         sets_domain.add(args.domain)
+    banner()
     for domain in sets_domain:
         args.domain=domain
         brute = Brutedomain(args)
-        start=time.time()
-        i = 0
-        print("*****************************Begin*******************************")
-        while(not brute.queues.empty()):
-            i = i + 1
-            try:
-                brute.run()
-                brute.handle_data()
-                brute.raw_write_disk()
-                if(brute.queues.qsize() < 30000):
-                    while(brute.queues.qsize()<brute.set_dynamic_num()):
-                        if(not brute.generate_sub()):
-                            break
-                gc.collect()
-                end = time.time()
-                wait_size = brute.queues.qsize()
-                print(
-                    "domain: {domain} |found：{found_count} number|speed：{velocity} number/s|waiting：{qsize} number|"
-                      .format(domain=domain,
-                              qsize=wait_size,
-                              found_count=brute.found_count,
-                              velocity=round(brute.segment_num*i/(end-start),2)))
-            except KeyboardInterrupt:
-                print("user stop")
-                sys.exit(1)
-        brute.deal_write_disk()
-        print("*****************************Over********************************")
+        try:
+            brute.run()
+        except KeyboardInterrupt:
+            print('user stop')
+

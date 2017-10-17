@@ -38,13 +38,15 @@ Million of subs support
 git clone https://github.com/yanxiu0614/subdomain3.git
 
 pip install -r requirement.txt
+
+python2/3 brutedns.py -d tagetdomain -s high -l 5
 ```
 ## Usage
 
 Short Form    | Long Form     | Description
 ------------- | ------------- |-------------
 -d            | --domain      | target domain,for example: baidu.com
--s            | --bruteforce  | speed,three patterns:fast,medium,low
+-s            | --speed  | speed,three patterns:fast,medium,low
 -l            | --level       | example: 2:baidu.com; 3:world.baidu.com;
 -f            | --file        | The list of target domain
 

@@ -38,13 +38,15 @@ medium 模式下的截图:
 git clone https://github.com/yanxiu0614/subdomain3.git
 
 pip install -r requirement.txt
+
+python2/3 brutedns.py -d tagetdomain -s high -l 5
 ```
 ## 使用方法
 
 Short Form    | Long Form     | Description
 ------------- | ------------- |-------------
 -d            | --domain      | 目标域名,例如: baidu.com
--s            | --bruteforce  | 速度模式,三种速度模式:fast,medium,low
+-s            | --speed  | 速度模式,三种速度模式:fast,medium,low
 -l            | --level       | 例子: 2:baidu.com; 3:world.baidu.com;
 -f            | --file        | 使用文件,每行一个子域名
 
@@ -69,7 +71,7 @@ Short Form    | Long Form     | Description
 
 - 2017-3-17: 大字典支持.支持百万级;
 
-- 2017-3-10: 添加了文件中域名爆破的支持;更新了CDNA厂商;
+- 2017-3-10: 添加了文件中域名爆破的支持;更新了CDN厂商;
 
 - 2017-2-26: 多级域名支持,没有级数上限;较大字典支持;内存占用为原来四分之一;更快;
 

@@ -13,10 +13,7 @@ else:
 import csv
 import gc
 import os
-
 import argparse
-from publicsuffix import PublicSuffixList
-from publicsuffix import fetch
 import dns.resolver
 from IPy import IP
 import gevent
@@ -71,7 +68,6 @@ class Brutedomain:
         self.segment_num = self.judge_speed(args.speed)
         self.found_count=0
         self.add_ulimit()
-        self.psl=self.get_suffix()
         self.dict_ip_count =dict()
 
     def add_ulimit(self):
@@ -85,10 +81,6 @@ class Brutedomain:
                 cdn_set.add(line.strip())
         return cdn_set
 
-    def get_suffix(self):
-        suffix_list = fetch()
-        psl = PublicSuffixList(suffix_list)
-        return psl
 
     def get_target_domain(self):
         file_name = args.file
@@ -102,11 +94,10 @@ class Brutedomain:
         return sets_domain
 
     def check_cdn(self,cname):
-        cdn_name=self.psl.get_public_suffix(cname)
-        if cdn_name in self.set_cdn:
-            return True
-        else:
-            return False
+        for cdn in self.set_cdn:
+            if cdn in cname:
+                return True
+        return False
 
     def get_type_id(self, name):
         return dns.rdatatype.from_text(name)
@@ -210,7 +201,6 @@ class Brutedomain:
                 pass
 
         self.found_count = self.found_count +self.dict_ip.__len__()
-       # invert_dict_ip = copy.deepcopy(self.dict_ip)
 
         for subdomain, ip_list in self.dict_ip.items():
             if (str(subdomain).count(".") < self.level):

@@ -58,6 +58,8 @@ Short Form    | Long Form     | Description
 
 ## Changelog:
 
+- 2017-10-26:；optimize the  processes；fix bug;
+
 - 2017-10-11:Rebuild part of the code; api support; result is more readable；update cdn-severs；faster
 
 - 2017-6-17: delete universal parse opthon(-p t/f);add a file of config;optimze strategy for universal parse

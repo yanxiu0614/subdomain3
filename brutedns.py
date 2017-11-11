@@ -6,6 +6,7 @@
 import sys
 import platform
 import time
+import shutil
 if sys.version>'3':
     from queue import Queue
 else:
@@ -22,13 +23,13 @@ monkey.patch_all()
 
 import lib.config as config
 
-# import logging
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     filename="brute.log",
-#     filemode="a",
-#     datefmt='%(asctime)s-%(levelname)s-%(message)s'
-# )
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename="brute.log",
+    filemode="a",
+    datefmt='%(asctime)s-%(levelname)s-%(message)s'
+)
 
 class Brutedomain:
     def __init__(self,args):
@@ -58,6 +59,8 @@ class Brutedomain:
         self.resolver.timeout = 4
         self.set_cdn = self.load_cdn()
         self.queues = Queue()
+        self.set_next_sub = self.load_next_sub()
+        self.extract_next_sub(self.target_domain)
         self.get_subname()
         self.dict_cname = dict()
         self.dict_ip = dict()
@@ -69,6 +72,32 @@ class Brutedomain:
         self.found_count=0
         self.add_ulimit()
         self.dict_ip_count =dict()
+
+    def load_other_result(self):
+        subdomain_list=list()
+        with open('{target_domain}.log'.format(target_domain=self.target_domain),'r') as search_list:
+            for domain in search_list:
+                self.queues.put(domain.strip().strip('\n').strip('\r\n'))
+                subdomain_list.append(domain.strip().strip('\n').strip('\r\n'))
+        return subdomain_list
+
+    def extract_next_sub(self,target_domain):
+        if(os.path.exists('{target_domain}.log'.format(target_domain=self.target_domain))):
+            for subdoamin in self.load_other_result():
+                sub = subdoamin.strip(".{domain}".format(domain=target_domain))
+                sub_num = sub.split(".")
+                if (len(sub_num) != 1):
+                    sub_num.remove(sub_num[-1])
+                    for sub in sub_num:
+                        self.set_next_sub.add(sub.strip())
+
+    def load_next_sub(self):
+        temp_set=set()
+        with open('dict/next_sub_full.txt', 'r') as file_next_sub:
+            for next_sub in file_next_sub:
+                temp_set.add(next_sub)
+        return temp_set
+
 
     def add_ulimit(self):
         if(platform.system()!="Windows"):
@@ -94,8 +123,9 @@ class Brutedomain:
         return sets_domain
 
     def check_cdn(self,cname):
+        logging.debug(cname)
         for cdn in self.set_cdn:
-            if cdn in cname:
+            if( cdn in cname or 'cdn' in cname):
                 return True
         return False
 
@@ -154,11 +184,10 @@ class Brutedomain:
     def generate_sub(self):
         try:
             domain=self.queue_sub.get_nowait()
-            with open('dict/next_sub_full.txt', 'r') as file_next_sub:
-                for next_sub in file_next_sub:
-                    subdomain = "{next}.{domain}".format(next=next_sub.strip(), domain=domain)
-                    self.queues.put_nowait(subdomain)
-                return True
+            for next_sub in self.set_next_sub:
+                subdomain = "{next}.{domain}".format(next=next_sub.strip(), domain=domain)
+                self.queues.put_nowait(subdomain)
+            return True
         except Exception:
             return False
 
@@ -256,6 +285,22 @@ class Brutedomain:
         self.dict_ip.clear()
         self.dict_cname.clear()
 
+    def  merge_subdomain(self):
+        if (os.path.exists('{target_domain}.log'.format(target_domain=self.target_domain))):
+            subdomain_list=self.load_other_result()
+            temp_set= set()
+            with open('./result/{result}/{result}.csv'.format(result=self.target_domain), 'a+') as csvfile:
+                brute_result = csv.reader(csvfile)
+                writer = csv.writer(csvfile)
+                for each in brute_result:
+                    if (each[0] != "domain"):
+                        temp_set.add(each[0])
+                for subdomain in subdomain_list:
+                    if(subdomain not in temp_set):
+                        writer.writerow([subdomain,'',''])
+            shutil.move('{target_domain}.log'.format(target_domain=self.target_domain), './result/{result}/{result}.log'.format(
+                result=self.target_domain))
+
     def deal_write_disk(self):
         if( not os.path.exists('result/{domain}'.format(domain=self.target_domain))):
             os.mkdir('result/{domain}'.format(domain=self.target_domain))
@@ -265,6 +310,11 @@ class Brutedomain:
             writer.writerow(['IP', 'frequency', 'active'])
             for ip_frequency in ip_flags:
                 writer.writerow([ip_frequency[0], ip_frequency[1], self.active_ip_dict[ip_frequency[0]]])
+
+        self.merge_subdomain()
+
+
+
 
     def cmd_print(self,wait_size,start,end,i):
         print("domain: {domain} |found：{found_count} number|speed：{velocity} number/s|waiting：{qsize} number|"
@@ -307,8 +357,9 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--file",
                         help="The list of domain")
 
-
+    api_flag=0
     def brute_subdomain_api(domain,speed,level):
+        api_flag=1
         cmd_args = parser.parse_args()
         cmd_args.domain=domain
         cmd_args.speed=speed
@@ -328,21 +379,21 @@ if __name__ == '__main__':
         　 　Coded By 彦修 (V2.0 RELEASE) email:root@yanxiuer.com
         """)
 
-    args = parser.parse_args()
-    file_name=args.file
-    sets_domain = set()
-    if file_name:
-        with open(file_name, 'r') as file_domain:
-            for line in file_domain:
-                sets_domain.add(line.strip())
-    else:
-        sets_domain.add(args.domain)
-    banner()
-    for domain in sets_domain:
-        args.domain=domain
-        brute = Brutedomain(args)
-        try:
-            brute.run()
-        except KeyboardInterrupt:
-            print('user stop')
-
+    if(api_flag==0):
+        args = parser.parse_args()
+        file_name=args.file
+        sets_domain = set()
+        if file_name:
+            with open(file_name, 'r') as file_domain:
+                for line in file_domain:
+                    sets_domain.add(line.strip())
+        else:
+            sets_domain.add(args.domain)
+        banner()
+        for domain in sets_domain:
+            args.domain=domain
+            brute = Brutedomain(args)
+            try:
+                brute.run()
+            except KeyboardInterrupt:
+                print('user stop')

@@ -31,6 +31,10 @@ Million of subs support
 * Less resource consumption
 
 1 CPU/1GB Memory/1Mbps bandwidth
+* More intelligent
+
+The strategy of dynamically adjusting of dic by importing subdomains from other sorces，suppport；
+
 
 ## Getting started
 
@@ -58,9 +62,11 @@ Short Form    | Long Form     | Description
 
 ## Changelog:
 
+- 2017-11-11:；import subdomains from other sources support（You should create a new file of target_domain.log, and put it with 'brutedns.py' in the same directory），it will improve the accuracy；it is more convenient for use API；
+
 - 2017-10-26:；optimize the  processes；fix bug;
 
-- 2017-10-11:Rebuild part of the code; api support; result is more readable；update cdn-severs；faster
+- 2017-10-11:Rebuild part of the program; api support; result is more readable；update cdn-severs；faster
 
 - 2017-6-17: delete universal parse opthon(-p t/f);add a file of config;optimze strategy for universal parse
 

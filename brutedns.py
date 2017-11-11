@@ -23,13 +23,13 @@ monkey.patch_all()
 
 import lib.config as config
 
-import logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename="brute.log",
-    filemode="a",
-    datefmt='%(asctime)s-%(levelname)s-%(message)s'
-)
+# import logging
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     filename="brute.log",
+#     filemode="a",
+#     datefmt='%(asctime)s-%(levelname)s-%(message)s'
+# )
 
 class Brutedomain:
     def __init__(self,args):
@@ -123,7 +123,6 @@ class Brutedomain:
         return sets_domain
 
     def check_cdn(self,cname):
-        logging.debug(cname)
         for cdn in self.set_cdn:
             if( cdn in cname or 'cdn' in cname):
                 return True

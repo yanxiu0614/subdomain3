@@ -13,6 +13,7 @@ medium 模式下的截图:
 ![](screenshot.png)
 
 ## 特性
+
 * 更快
 
 三种速度模式. 用户也可以修改配置文件(/lib/config.py) 来获得更高的速度.

@@ -5,7 +5,7 @@
 **README.md in [Chinese 中文](https://github.com/yanxiu0614/subdomain3/blob/master/README_ZH.md)**
 
 ## CDN PLAN
-Hello,my friend,I am very happy that the tool can help you. Now ,I need your help, and for this tool can be more efficient and easy to use.I suggest that you set cdn(command) is y when you use the tool ,and send the file(/result/cname.txt) to me(email:yanxiu0614@gmail.com).I promise that the cnames will be used to enrich dict of cdn_servers in this project.Thank you!
+Hello,my friend,I am very happy that the tool can help you. Now ,I need your help, and for this tool can be more efficient and easy to use.I suggest that you set cdn(command) is y when you use the tool ,and send the file(/result/cname.txt) to me(email:yanxiu0614@gmail.com).I promise that the cnames will be used to enrich dict of cdn_servers in this project. Besides,QQ Group of Tencent:681595202. Thank you!
 
 
 ## Description
@@ -55,9 +55,10 @@ python2/3 brutedns.py -d tagetdomain -s high -l 5
 Short Form    | Long Form     | Description
 ------------- | ------------- |-------------
 -d            | --domain      | target domain,for example: baidu.com
--s            | --speed  | speed,three patterns:fast,medium,low
+-s            | --speed       | speed,three patterns:fast,medium,low
 -l            | --level       | example: 2:baidu.com; 3:world.baidu.com;
 -f            | --file        | The list of target domain
+-c            | --cdn         | n or y,collect cnames
 
 ## Thanks:
 

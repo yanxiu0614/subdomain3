@@ -53,9 +53,10 @@ python2/3 brutedns.py -d tagetdomain -s high -l 5
 Short Form    | Long Form     | Description
 ------------- | ------------- |-------------
 -d            | --domain      | 目标域名,例如: baidu.com
--s            | --speed  | 速度模式,三种速度模式:fast,medium,low
+-s            | --speed       | 速度模式,三种速度模式:fast,medium,low
 -l            | --level       | 例子: 2:baidu.com; 3:world.baidu.com;
 -f            | --file        | 使用文件,每行一个子域名
+-c            | --cdn         | 开启CDN搜集,y或者n
 
 
 ## 致谢:

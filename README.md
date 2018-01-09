@@ -4,6 +4,10 @@
 
 **README.md in [Chinese 中文](https://github.com/yanxiu0614/subdomain3/blob/master/README_ZH.md)**
 
+## CDN PLAN
+Hello,my friend,I am very happy that the tool can help you. Now ,I need your help, and for this tool can be more efficient and easy to use.I suggest that you set cdn(command) is y when you use the tool ,and send the file(/result/cname.txt) to me(email:yanxiu0614@gmail.com).I promise that the cnames will be used to enrich dict of cdn_servers in this project.Thank you!
+
+
 ## Description
 Subdomain3 is a new generation of tool , It helps penetration testers to discover more information  in a shorter time than other tools.The  information includes subdomains, IP, CDN, and so on. Please enjoy it.
 

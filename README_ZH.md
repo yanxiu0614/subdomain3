@@ -4,6 +4,9 @@
 
 **README.md in [English](https://github.com/yanxiu0614/subdomain3/blob/master/README.md)**
 
+## CDN搜集计划
+非常感谢各位小伙伴对subdomian3的肯定,目前由于个人时间有限,cname的搜集一直处于停滞状态,导致程序识别CDN的广度不够,为后期IP的搜集增加了很多困难,所以希望借助大家的力量共同搜集.开启方式很简单,只需要设置-c命令为y,然后把爆破之后result文件下的cname.txt文件发送到邮箱:yanxiu0614@gmail.com.我会在汇总分析对字典进行扩充,并上传到项目之中.如果有啥问题或者建议,也欢迎加入到QQ群:681595202.
+
 ## 描述
 Subdomain3是新一代子域名爆破工具,它帮助渗透测试者相比与其他工具更快发现更多的信息,这些信息包括子域名,IP,CDN信息等,开始使用它吧!
 

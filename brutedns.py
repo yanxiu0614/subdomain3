@@ -324,7 +324,7 @@ class Brutedomain:
                 txt.write('{cname}\r\n'.format(cname=cname))
 
     def cmd_print(self, wait_size, start, end, i):
-        print("domain: {domain} |found：{found_count} number|speed：{velocity} number/s|waiting：{qsize} number|"
+        print("domain: {domain} |found: {found_count} number|speed:{velocity} number/s|waiting: {qsize} number|"
               .format(domain=self.target_domain,
                       qsize=wait_size,
                       found_count=self.found_count,
@@ -387,14 +387,15 @@ if __name__ == '__main__':
 
     def banner():
         print("""
-                  _         _                       _       ____
-                 | |       | |                     (_)     |___ \
-        ___ _   _| |__   __| | ___  _ __ ___   __ _ _ _ __   __) |
-       / __| | | | '_ \ / _` |/ _ \| '_ ` _ \ / _` | | '_ \ |__ <
-       \__ \ |_| | |_) | (_| | (_) | | | | | | (_| | | | | |___) |
-       |___/\__,_|_.__/ \__,_|\___/|_| |_| |_|\__,_|_|_| |_|____/
-        　 　Coded By 彦修 (V2.0 RELEASE) email:yanxiu0614@gmail.com
-        """)
+                          _         _                       _       ____  
+                         | |       | |                     (_)     |___ \ 
+                ___ _   _| |__   __| | ___  _ __ ___   __ _ _ _ __   __) |
+               / __| | | | '_ \ / _` |/ _ \| '_ ` _ \ / _` | | '_ \ |__ < 
+               \__ \ |_| | |_) | (_| | (_) | | | | | | (_| | | | | |___) |
+               |___/\__,_|_.__/ \__,_|\___/|_| |_| |_|\__,_|_|_| |_|____/ 
+                　 　Coded By yanxiu (V2.0 RELEASE) email:root@yanxiuer.com
+                """)
+
 
     if(api_flag == 0):
         args = parser.parse_args()

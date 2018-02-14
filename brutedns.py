@@ -37,7 +37,7 @@ class Brutedomain:
         self.target_domain = args.domain
         self.cdn_flag = args.cdn
         if not (self.target_domain):
-            print('usage: brutedns.py -d/-f baidu.com/domains.txt -s low/medium/high')
+            print('usage: brutedns.py -d/-f baidu.com/domains.txt -s low/medium/high -c y/n')
             sys.exit(1)
         self.level = args.level
         self.resolver = dns.resolver.Resolver()
@@ -372,7 +372,7 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--file",
                         help="The list of domain")
     parser.add_argument("-c", "--cdn",
-                        help="collect cnnames,y or n")
+                        help="collect cnnames,y or n", default='n')
     api_flag = 0
 
     def brute_subdomain_api(domain, speed, level):

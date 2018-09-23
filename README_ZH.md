@@ -44,7 +44,7 @@ medium 模式下的截图:
 ```
 git clone https://github.com/yanxiu0614/subdomain3.git
 
-pip install -r requirement.txt
+pip install -r requirements.txt
 
 python2/3 brutedns.py -d tagetdomain -s high -l 5
 ```

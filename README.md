@@ -1,11 +1,11 @@
 # Subdomain3
 
-![version](https://img.shields.io/badge/version-2.0-green.svg) ![stars](https://img.shields.io/github/stars/yanxiu0614/subdomain3.svg) ![forks](https://img.shields.io/github/forks/yanxiu0614/subdomain3.svg)  ![language](https://img.shields.io/badge/language-python2%2B-green.svg) ![language](https://img.shields.io/badge/language-python3%2B-green.svg)
+![version](https://img.shields.io/badge/version-2.1-green.svg) ![stars](https://img.shields.io/github/stars/yanxiu0614/subdomain3.svg) ![forks](https://img.shields.io/github/forks/yanxiu0614/subdomain3.svg)  ![language](https://img.shields.io/badge/language-python2%2B-green.svg) ![language](https://img.shields.io/badge/language-python3%2B-green.svg)
 
 **README.md in [Chinese 中文](https://github.com/yanxiu0614/subdomain3/blob/master/README_ZH.md)**
 
 ## CDN PLAN
-Hello,my friend,I am very happy that the tool can help you. Now ,I need your help, and for this tool can be more efficient and easy to use.I suggest that you set cdn(command) is y when you use the tool ,and send the file(/result/cname.txt) to me(email:yanxiu0614@gmail.com).I promise that the cnames will be used to enrich dict of cdn_servers in this project. Besides,QQ Group of Tencent:681595202. Thank you!
+Hello,my friend,I am very happy that the tool can help you. Now ,I need your help, and for this tool can be more efficient and easy to use.I suggest that you set cdn(command) is y when you use the tool ,and send the file(/result/cname.txt) to me(email:yanxiu0614@gmail.com).I promise that the cnames will be used to enrich dict of cdn_servers in this project. . Thank you!
 
 
 ## Description
@@ -67,6 +67,8 @@ Short Form    | Long Form     | Description
 
 
 ## Changelog:
+
+- 2018-10-6: api support,import brutedns_api and you will get the number of results in the end;Optimized the deduplication strategy;
 
 - 2018-2-14: fix issue(TypeError: argument of type 'NoneType' is not iterable)
 

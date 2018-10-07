@@ -117,7 +117,7 @@ class Brutedomain:
 
     def load_next_sub(self):
         temp_set = set()
-        with open('dict/next_sub_full.txt', 'r') as file_next_sub:
+        with open(self.next_sub_dict, 'r') as file_next_sub:
             for next_sub in file_next_sub:
                 temp_set.add(next_sub)
         return temp_set
@@ -189,7 +189,7 @@ class Brutedomain:
             pass
 
     def get_subname(self):
-        with open('dict/wydomain.csv', 'r') as file_sub:
+        with open(self.sub_dict, 'r') as file_sub:
             for sub in file_sub:
                 domain = "{sub}.{target_domain}".format(
                     sub=sub.strip(), target_domain=self.target_domain)
@@ -335,17 +335,6 @@ class Brutedomain:
     def merge_subdomain(self):
         if (os.path.exists('{target_domain}.log'.format(
                 target_domain=self.target_domain))):
-            subdomain_list = self.load_other_result()
-            temp_set = set()
-            with open('./result/{result}/{result}.csv'.format(result=self.target_domain), 'a+') as csvfile:
-                brute_result = csv.reader(csvfile)
-                writer = csv.writer(csvfile)
-                for each in brute_result:
-                    if (each[0] != "domain"):
-                        temp_set.add(each[0])
-                for subdomain in subdomain_list:
-                    if(subdomain not in temp_set):
-                        writer.writerow([subdomain, '', ''])
             shutil.move('{target_domain}.log'.format(target_domain=self.target_domain),
                         './result/{result}/{result}.log'.format(result=self.target_domain))
 
@@ -425,13 +414,13 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--file",
                         help="The list of domain")
     parser.add_argument("-c", "--cdn",
-                        help="collect cnnames,y or n", default='n')
+                        help="collect cnnames,y or n", default='')
     parser.add_argument("-f1", "--sub_file",
-                        help="sub dict", default='n')
+                        help="sub dict", default='dict/wydomain.csv')
     parser.add_argument("-f2", "--next_sub_file",
-                        help="next_sub dict", default='n')
+                        help="next_sub dict", default='dict/next_sub_full.txt')
     parser.add_argument("-f3", "--other_file",
-                        help="subdomain log", default='n')
+                        help="subdomain log", default='')
 
 
     def banner():

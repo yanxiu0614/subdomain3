@@ -80,7 +80,7 @@ class Brutedomain:
         self.segment_num = self.judge_speed(args.speed)
         self.found_count = 0
         self.add_ulimit()
-        self.dict_ip_count = dict()
+        
 
 
     def load_other_result_from_list(self):
@@ -226,6 +226,7 @@ class Brutedomain:
 
     def handle_data(self):
         temp_list = list()
+        dict_ip_count = dict()
         for subdomain, cname_list in self.dict_cname.items():
             for cname in cname_list:
                 if(self.check_cdn(cname)):
@@ -235,13 +236,13 @@ class Brutedomain:
 
         for subdomain, ip_list in self.dict_ip.items():
             ip_str = str(sorted(ip_list))
-            if (self.dict_ip_count.__contains__(ip_str)):
-                if(self.dict_ip_count[ip_str] > config.ip_max_count):
+            if (dict_ip_count.__contains__(ip_str)):
+                if(dict_ip_count[ip_str] > config.ip_max_count):
                     temp_list.append(subdomain)
                 else:
-                    self.dict_ip_count[ip_str] = self.dict_ip_count[ip_str] + 1
+                    dict_ip_count[ip_str] = dict_ip_count[ip_str] + 1
             else:
-                self.dict_ip_count[ip_str] = 1
+                dict_ip_count[ip_str] = 1
 
             for filter_ip in config.waiting_fliter_ip:
                 if (filter_ip in ip_str):
@@ -252,10 +253,10 @@ class Brutedomain:
         for subdomain1, ip_list1 in self.dict_ip.items():
             for subdomain2, ip_list2 in self.dict_ip.items():
                 if not sys.version > '3':
-                    if(((str('.')+subdomain1) in subdomain2) and cmp(ip_list1,ip_list2)):
+                    if(((str('.')+subdomain1) in subdomain2) and cmp(ip_list1,ip_list2) and subdomain1!=self.target_domain):
                         subdomain_white.append(subdomain1)
                 else:
-                    if(((str('.')+subdomain1) in subdomain2) and ip_list1==ip_list2):
+                    if(((str('.')+subdomain1) in subdomain2) and ip_list1==ip_list2 and subdomain1!=self.target_domain):
                         subdomain_white.append(subdomain1)
         subdomain_black=set()
         for subdomain1 in subdomain_white:
@@ -265,8 +266,8 @@ class Brutedomain:
                     subdomain_black.add(str(sorted(self.dict_ip[subdomain3])))
                     i=i+1
                     #print(subdomain_black)
-                    if(i>5 and len(subdomain_black)==1):
-                        temp_list.append(subdomain2)
+                    if(i>15 and len(subdomain_black)==1):
+                        temp_list.append(subdomain3)
 
         for subdomain in temp_list:
             try:

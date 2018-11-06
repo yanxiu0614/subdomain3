@@ -133,7 +133,7 @@ class Brutedomain:
 
         for subdomain in other_result:
             if (('.' + str(self.target_domain)) in subdomain):
-                other_subdomain_list.append(domain.strip())
+                other_subdomain_list.append(subdomain.strip())
         return other_subdomain_list
 
     def extract_next_sub_log(self):

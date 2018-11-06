@@ -117,7 +117,6 @@ class Brutedomain:
     def load_result_from_other(self):
         log_type = type(self.other_result)
         other_subdomain_list = list()
-        print(self.other_result)
         if (log_type == str):
             try:
                 subdomain_log = open('{target_domain}'.format(target_domain=self.other_result), 'r')
@@ -347,7 +346,7 @@ class Brutedomain:
                     if not self.generate_sub():
                         break
         self.handle_data()
-        self.handle_data()
+        self.raw_write_disk()
         self.deal_write_disk()
         print("*****************************Over********************************")
 

@@ -52,13 +52,16 @@ python2/3 brutedns.py -d tagetdomain -s high -l 5
 ```
 ## Usage
 
-Short Form    | Long Form     | Description
-------------- | ------------- |-------------
--d            | --domain      | target domain,for example: baidu.com
--s            | --speed       | speed,three patterns:fast,medium,low
--l            | --level       | example: 2:baidu.com; 3:world.baidu.com;
--f            | --file        | The list of target domain
--c            | --cdn         | n or y,collect cnames
+Short Form    | Long Form      | Description
+------------- | -------------  |-------------
+-d            | --domain       | target domain,for example: baidu.com
+-s            | --speed        | speed,three patterns:fast,medium,low
+-l            | --level        | example: 2:w.baidu.com; 3:w.w.baidu.com;
+-f            | --file         | The list of target domain
+-c            | --cdn          | n or y,collect cnames
+-f1           | --sub_file     | sub dict
+-f2           | --next_sub_file| next sub dict
+-f3           | --other_file   | subdomain log from search engine
 
 ## Thanks:
 
@@ -67,6 +70,7 @@ Short Form    | Long Form     | Description
 
 
 ## Changelog:
+- 2018-11-6: improve the speed;optimize the  processes；
 
 - 2018-10-6: api support,import brutedns_api and you will get the number of results in the end;Optimized the deduplication strategy;
 

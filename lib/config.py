@@ -20,4 +20,4 @@ medium_segment_num = 15000
 low_segment_num = 10000
 
 # 设置一个ip出现的最多次数,后续出现将被丢弃
-ip_max_count = 5
+ip_max_count = 30

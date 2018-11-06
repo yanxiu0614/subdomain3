@@ -50,14 +50,16 @@ python2/3 brutedns.py -d tagetdomain -s high -l 5
 ```
 ## 使用方法
 
-Short Form    | Long Form     | Description
-------------- | ------------- |-------------
--d            | --domain      | 目标域名,例如: baidu.com
--s            | --speed       | 速度模式,三种速度模式:fast,medium,low
--l            | --level       | 例子: 2:baidu.com; 3:world.baidu.com;
--f            | --file        | 使用文件,每行一个子域名
--c            | --cdn         | 开启CDN搜集,y或者n
-
+Short Form    | Long Form      | Description
+------------- | -------------  |-------------
+-d            | --domain       | 目标域名,例如: baidu.com
+-s            | --speed        | 速度模式,三种速度模式:fast,medium,low
+-l            | --level        | 例子: 2:w.baidu.com; 3:w.w.baidu.com;
+-f            | --file         | 使用文件,每行一个子域名
+-c            | --cdn          | 开启CDN搜集,y或者n
+-f1           | --sub_file     | 一级域名字典
+-f2           | --next_sub_file| 二级域名字典
+-f3           | --other_file   | 外部域名结果
 
 ## 致谢:
 
@@ -66,6 +68,8 @@ Short Form    | Long Form     | Description
 
 
 ## 日志:
+
+- 2018-11-6: 去除了在泛解析下的bug，优化了执行效率；删除资源耗费较高的去重策略。
 
 - 2018-10-6: 优化了api的使用，支持模块的复用，从而可以内嵌到其他模块之中。优化了域名的去重策略，避免大量无效域名；
 

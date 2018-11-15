@@ -122,7 +122,6 @@ class Brutedomain:
                 subdomain_log = open('{target_domain}'.format(target_domain=self.other_result), 'r')
                 other_result = [subdomain.strip() for subdomain in subdomain_log]
                 subdomain_log.close()
-                print other_result
             except Exception:
                 print('subdomain log is not exist')
                 sys.exit(1)

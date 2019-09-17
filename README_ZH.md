@@ -4,9 +4,6 @@
 
 **README.md in [English](https://github.com/yanxiu0614/subdomain3/blob/master/README.md)**
 
-## CDN搜集计划
-非常感谢各位小伙伴对subdomian3的肯定,目前由于个人时间有限,cname的搜集一直处于停滞状态,导致程序识别CDN的广度不够,为后期IP的搜集增加了很多困难,所以希望借助大家的力量共同搜集.开启方式很简单,只需要设置-c命令为y,然后把爆破之后result文件下的cname.txt文件发送到邮箱:yanxiu0614@gmail.com.我会在汇总分析对字典进行扩充,并上传到项目之中.如果有啥问题或者建议,也欢迎与我微博互动，微博：<a href="https://weibo.com/yanxiu0" rel="nofollow">彦修</a>
-
 ## 描述
 Subdomain3是新一代子域名爆破工具,它帮助渗透测试者相比与其他工具更快发现更多的信息,这些信息包括子域名,IP,CDN信息等,开始使用它吧!
 
@@ -22,7 +19,7 @@ medium 模式下的截图:
 三种速度模式. 用户也可以修改配置文件(/lib/config.py) 来获得更高的速度.
 * CDN识别支持
 
-可以判定域名是否使用了CDN.
+可以判定域名是否使用了CDN,同时新增在某些情况下自动识别是否使用CDN，而不只依赖给定的列表；
 * 标准C段支持
 
 可以对未使用CDN的域名IP进行分类.
@@ -37,7 +34,7 @@ medium 模式下的截图:
 1个CPU/1GB内存/1Mbps带宽 即可获得很高速度
 * 更智能
 
-支持从其他渠道导入子域名，同时会将部分字段导入字典二次爆破，从而更准确。
+可以自动发现最快的DNS服务器，并使用其进行爆破，从而获得更快速度；支持从其他渠道导入子域名，同时会将部分字段导入字典二次爆破，从而更准确。
 
 ## 开始
 
@@ -56,6 +53,7 @@ Short Form    | Long Form      | Description
 -s            | --speed        | 速度模式,三种速度模式:fast,medium,low
 -l            | --level        | 例子: 2:w.baidu.com; 3:w.w.baidu.com;
 -f            | --file         | 使用文件,每行一个子域名
+-ns           | --default_dns  | y为使用默认DNS；n为搜索最快的DNS；
 -c            | --cdn          | 开启CDN搜集,y或者n
 -f1           | --sub_file     | 一级域名字典
 -f2           | --next_sub_file| 二级域名字典
@@ -68,6 +66,7 @@ Short Form    | Long Form      | Description
 
 
 ## 日志:
+- 2019-09-17:支持自动搜索最快的DNS；支持自动识别CDN；优化爆破过程降低占用；提高速度；更新了界面UI；修复BUG等等，总的来说，本次新增特性较多；
 
 - 2018-11-6: 去除了在泛解析下的bug，优化了执行效率；删除资源耗费较高的去重策略。
 
@@ -100,4 +99,4 @@ Short Form    | Long Form      | Description
 - 2017-2-24: 支持mac os等
 
 
-&copy;<a href="https://github.com/sixtant" target="_blank">Sixtant Security Lab</a> 2016-2017
+&copy;<a href="https://github.com/monsterzer0" target="_blank">Monster Zero Team</a>  2019

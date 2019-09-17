@@ -92,7 +92,7 @@ class Brutedomain:
             new_filename = filename + "_" + str(os.stat(filename + ".csv").st_mtime).replace(".", "")
             os.rename(filename + ".csv", new_filename + ".csv")
         if os.path.isfile(filename + "_deal.csv"):
-            new_filename = filename + "_" + str(os.stat(filename + ".csv").st_mtime).replace(".", "")
+            new_filename = filename + "_" + str(os.stat(filename + "_deal.csv").st_mtime).replace(".", "")
             os.rename(filename + "_deal.csv", new_filename + "_deal.csv")
         with open(filename + ".csv", 'a') as csvfile:
             writer = csv.writer(csvfile)
@@ -176,7 +176,7 @@ class Brutedomain:
             start = time.time()
             for _ in range(2):
                 random_str = str(random.randint(1, 1000))
-                domain_list = [random_str + "testnamservspeed.com" for _ in range(700)]
+                domain_list = [random_str + "testnamservspeed.com" for _ in range(200)]
                 coroutines = [gevent.spawn(self.query_domain, l) for l in domain_list]
                 gevent.joinall(coroutines)
             end = time.time()

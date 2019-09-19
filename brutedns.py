@@ -40,7 +40,7 @@ class Brutedomain:
     def __init__(self, args):
         self.target_domain = args.domain
         self.check_env()
-        self.cdn_flag = args.cdn
+        self.cname_flag = args.cname
         if not (self.target_domain):
             print('usage: brutedns.py -h')
             sys.exit(1)
@@ -92,7 +92,8 @@ class Brutedomain:
             new_filename = filename + "_" + str(os.stat(filename + ".csv").st_mtime).replace(".", "")
             os.rename(filename + ".csv", new_filename + ".csv")
         if os.path.isfile(filename + "_deal.csv"):
-            new_filename = filename + "_" + str(os.stat(filename + "_deal.csv").st_mtime).replace(".", "")
+            if not new_filename:
+                new_filename = filename + "_" + str(os.stat(filename + "_deal.csv").st_mtime).replace(".", "")
             os.rename(filename + "_deal.csv", new_filename + "_deal.csv")
         with open(filename + ".csv", 'a') as csvfile:
             writer = csv.writer(csvfile)
@@ -141,26 +142,25 @@ class Brutedomain:
             other_result = []
 
         for subdomain in other_result:
-            if (('.' + str(self.target_domain)) in subdomain):
-                other_subdomain_list.append(subdomain.strip())
+            other_subdomain_list.append(subdomain.strip().strip("."))
         return other_subdomain_list
 
     def load_nameservers(self):
-        nameservers = set()
-        with open('dict/name_servers.txt', 'r') as file_cdn:
-            for cname in file_cdn:
-                nameservers.add(cname.strip())
-        return nameservers
+        nameserver_set = set()
+        with open('dict/name_servers.txt', 'r') as nameservers:
+            for nameserver in nameservers:
+                nameserver_set.add(nameserver.strip())
+        return nameserver_set
 
     def extract_next_sub_log(self):
         other_subdomain_list = self.load_result_from_other()
         for subdomain in other_subdomain_list:
-            self.queues.put(subdomain)
-            sub = subdomain.strip(".{domain}".format(domain=self.target_domain))
-            sub_num = sub.split(".")
-            if (len(sub_num) != 1):
-                sub_num.remove(sub_num[-1])
-                for sub in sub_num:
+            if (('.' + str(self.target_domain)) in subdomain):
+                self.queues.put(subdomain)
+            subname = subdomain.strip(".").replace(self.target_domain,"").strip(".")
+            if subname!="":
+                sub_list = subname.split(".")
+                for sub in sub_list:
                     self.set_next_sub.add(sub.strip())
 
     def check_nameservers(self):
@@ -283,7 +283,7 @@ class Brutedomain:
                 for _ip in config.waiting_fliter_ip:
                     if (ip == _ip):
                         temp_list.append(subdomain)
-                # if (IP(ip).iptype() == 'PRIVATE' or IP(ip).iptype() == 'RESERVED' ):
+                # if (IP(ip).iptype() != 'PUBLIC' ):
                 #    temp_list.append(subdomain)
 
         for subdomain in temp_list:
@@ -308,8 +308,9 @@ class Brutedomain:
             self.dict_cname_block[subdomain] = cname_list
         for subdomain, ip_list in self.dict_ip_block.items():
             for ip in ip_list:
-                if (IP(ip).iptype() == 'PRIVATE'):
-                    self.dict_ip_block[subdomain] = "private({ip})".format(ip=ip)
+                iptype=IP(ip).iptype()
+                if (iptype != 'PUBLIC'):
+                    self.dict_ip_block[subdomain] = "{iptype}({ip})".format(iptype=iptype,ip=ip)
                 else:
                     try:
                         key_yes = self.dict_cname_block[subdomain][-1]
@@ -341,7 +342,7 @@ class Brutedomain:
                     cname_list = self.dict_cname_block[subdomain]
                 except Exception:
                     flag = "No"
-                    cname_list = []
+                    cname_list = "Null"
                 writer.writerow([subdomain, flag, cname_list, ip_list])
         self.dict_ip_block.clear()
         self.dict_cname_block.clear()
@@ -360,7 +361,12 @@ class Brutedomain:
     def collect_cname(self):
         with open('result/cname.txt', 'a') as txt:
             for cname in self.cname_set:
-                txt.write('{cname}\r\n'.format(cname=cname.strip()))
+                flag=False
+                for cdn in self.set_cdn:
+                    if(cdn in cname or self.target_domain in cname):
+                        flag=True
+                if(flag==False):
+                    txt.write('{cname}\r\n'.format(cname=cname.strip()))
         with open('result/cdn.txt', 'a') as txt:
             for cdn in self.cdn_set:
                 txt.write('{cname}\r\n'.format(cname=cdn))
@@ -426,7 +432,7 @@ if __name__ == '__main__':
                         help="One domain each line")
     parser.add_argument("-ns", "--default_dns", default='n',
                         help="If you want use default dns,set it y,otherwise set n(It will automatically discover the fastest nameserver) ")
-    parser.add_argument("-c", "--cdn",
+    parser.add_argument("-c", "--cname",
                         help="Collect cname of subdomain and save to result/cname.txt,you can add it to cdn.txt when you find it is cdn ,y or n",
                         default='y')
     parser.add_argument("-f1", "--sub_file",
@@ -464,7 +470,7 @@ if __name__ == '__main__':
         brute = Brutedomain(args)
         try:
             brute.run()
-            if ('y' in brute.cdn_flag or 'Y' in brute.cdn_flag):
+            if ('y' in brute.cname_flag or 'Y' in brute.cname_flag):
                 brute.collect_cname()
         except KeyboardInterrupt:
             print('user stop')

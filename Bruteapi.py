@@ -18,12 +18,11 @@ class Brute_subdomain_api:
         cmd_args.domain = domain
         cmd_args.speed = speed
         cmd_args.level = level
-        cmd_args.level = cname
         cmd_args.sub_file = sub_dict
         cmd_args.default_dns= default_dns
         cmd_args.next_sub_file = next_sub_dict
         cmd_args.other_file = other_file
-        cmd_args.cdn='y'
+        cmd_args.cname='y'
         brute = Brutedomain(cmd_args)
         brute.run()
         return brute.found_count

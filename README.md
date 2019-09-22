@@ -35,7 +35,7 @@ Million of subs support
 1 CPU/1GB Memory/1Mbps bandwidth
 * More intelligent
 
-Automatically discover the fastest nameserver;The strategy of dynamically adjusting of dict by importing subdomains from other sources;
+Discover the fastest nameserver;The strategy of dynamically adjusting of dict by importing subdomains from other sources;Prevent dns cache pollution;
 
 
 ## Getting started
@@ -52,10 +52,10 @@ python2/3 brutedns.py -d tagetdomain -s high -l 5
 Short Form    | Long Form      | Description
 ------------- | -------------  |-------------
 -d            | --domain       | target domain,for example: baidu.com
--s         | --speed        | speed,three patterns:fast,medium,low
+-s            | --speed        | speed,three patterns:fast,medium,low
 -l            | --level        | example: 2:w.baidu.com; 3:w.w.baidu.com;
 -f            | --file         | The list of target domain
--c            | --cdn          | n or y,collect cnames
+-c            | --cname        | n or y,collect cnames
 -ns           | --default_dns  | n or y
 -f1           | --sub_file     | sub dict
 -f2           | --next_sub_file| next sub dict
@@ -68,6 +68,8 @@ Short Form    | Long Form      | Description
 
 
 ## Changelog:
+- 2019-09-22: New strategy to prevent dns cache pollution;Optimize the  processes,Fixed bug e.g
+
 - 2019-09-17: Automatically discover the fastest nameserver support;Determines whether the subdomain  uses CDN storage automatically support;Improve the speed;Optimize the  processes,Fix bug e.g
 
 - 2018-11-6: Improve the speed;Optimize the  processes;

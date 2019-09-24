@@ -260,9 +260,9 @@ class Brutedomain:
         for subdomain_list in self.black_ip_dict.values():
             temp_list.extend(subdomain_list)
         black_subdomain=set(temp_list)-self.white_filter_subdomain
-        for domian in  black_subdomain:
+        for domain in  black_subdomain:
             for next_sub in self.set_next_sub:
-                subdomain = "{next}.{domain}".format(next=next_sub.strip(), domain=domain)
+                subdomain = "{next}.{domain}".format(next=next_sub, domain=domain)
                 temp_set.add(subdomain)
         return temp_set
 

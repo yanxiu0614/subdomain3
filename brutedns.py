@@ -349,7 +349,7 @@ class Brutedomain:
 
         with open('result/{name}/result.txt'.format(name=self.target_domain), 'a') as result:
             for subdomain, ips in self.ip_block_dict.items():
-                result.write(f"{subdomain} {ips}\n")
+                result.write("{subdomain} {ips}\n".format(subdomain=subdomain, ips=ips))
 
         for subdomain, ip_list in self.ip_block_dict.items():
             if (subdomain.count(".") < self.level):

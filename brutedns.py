@@ -50,7 +50,7 @@ class Brutedomain:
         self.level = args.level
         self.sub_dict = args.sub_file
         self.speed = args.speed
-        self.default_dns = True if args.default_dns is "y" else False
+        self.default_dns = True if args.default_dns == "y" else False
         self.next_sub_dict = args.next_sub_file
         self.other_result = args.other_file
 
@@ -310,8 +310,6 @@ class Brutedomain:
             else:
                 temp_list.append(subdomain)
             
-        
-
         for ip_str,count in  self.ip_count_dict.items():
             if(count>10):
                 i=0
@@ -345,6 +343,14 @@ class Brutedomain:
         self.found_count = self.ip_all_dict.__len__()
         self.ip_all_dict.update(self.ip_block_dict)
         
+        # 实时写入文件
+        if (not os.path.exists('result/{domain}'.format(domain=self.target_domain))):
+            os.makedirs('result/{domain}'.format(domain=self.target_domain))
+
+        with open('result/{name}/result.txt'.format(name=self.target_domain), 'a') as result:
+            for subdomain, ips in self.ip_block_dict.items():
+                result.write(f"{subdomain} {ips}\n")
+
         for subdomain, ip_list in self.ip_block_dict.items():
             if (subdomain.count(".") < self.level):
                 self.queue_sub.put(subdomain)
@@ -438,6 +444,10 @@ class Brutedomain:
         sys.stdout.flush()
 
     def run(self):
+        # 先清空文件
+        if os.path.exists('result/{name}/result.txt'.format(name=self.target_domain)):
+            os.remove('result/{name}/result.txt'.format(name=self.target_domain))
+
         start = time.time()
         print("[+] Begin to brute domain")
         i = 0

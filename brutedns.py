@@ -273,18 +273,6 @@ class Brutedomain:
                 domain_list.append(self.queues.get())
         return domain_list
 
-    def get_black_subdomain(self):
-        temp_list = list()
-        temp_set = set()
-        for subdomain_list in self.black_ip_dict.values():
-            temp_list.extend(subdomain_list)
-        black_subdomain = set(temp_list) - self.white_filter_subdomain
-        for domain in black_subdomain:
-            for next_sub in self.set_next_sub:
-                subdomain = "{next}.{domain}".format(
-                    next=next_sub, domain=domain)
-                temp_set.add(subdomain)
-        return temp_set
 
     def judge_speed(self, speed):
         if (speed == "low"):
@@ -443,19 +431,23 @@ class Brutedomain:
                         self.active_ip_dict[CIP] = active_ip_list
 
     def raw_write_disk(self):
-        if (not os.path.exists(
-                'result/{domain}'.format(domain=self.target_domain))):
-            os.mkdir('result/{domain}'.format(domain=self.target_domain))
+        for subdomain, cname_list in self.cname_block_dict.items():
+            if (self.check_cdn(cname_list, self.target_domain)):
+                cname_list.append("Yes")
+            else:
+                cname_list.append("No")
+            self.cname_block_dict[subdomain] = cname_list
         with open('result/{name}/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:
             writer = csv.writer(csvfile)
             for subdomain, ip_list in self.ip_all_dict.items():
                 try:
-                    flag = self.dict_cname_all[subdomain].pop()
                     cname_list = self.cname_block_dict[subdomain]
+                    flag = cname_list.pop()
                 except Exception:
                     flag = "No"
                     cname_list = "Null"
                 writer.writerow([subdomain, flag, cname_list, ip_list])
+
         self.ip_all_dict.clear()
         self.cname_block_dict.clear()
 
@@ -480,12 +472,10 @@ class Brutedomain:
                         flag = True
                 if(flag == False):
                     txt.write(
-                        '{cname}'.format(
-                            cname=cname.strip()) +
-                        self.cmdline)
+                        '{cname}\r\n'.format(cname=cname.strip()))
         with open('result/cdn.txt', 'a') as txt:
             for cdn in self.cdn_set:
-                txt.write('{cname}'.format(cname=cdn) + self.cmdline)
+                txt.write('{cdn}\r\n'.format(cdn=cdn))
 
     def cmd_print(self, wait_size, start, end, i):
         scaned = self.segment_num * i

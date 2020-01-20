@@ -59,6 +59,9 @@ Short Form    | Long Form      | Description
 -f2           | --next_sub_file| 二级域名字典
 -f3           | --other_file   | 外部域名结果
 
+## 协议
+The MIT License(http://opensource.org/licenses/MIT)
+
 ## 致谢:
 
 - <a href="https://github.com/smarttang" target="view_window">smarttang(Tangyucong)</a>
@@ -66,6 +69,8 @@ Short Form    | Long Form      | Description
 
 
 ## 日志:
+- 2020-01-20: 优化了泛解析策略，降低策略占用，修复了BUG；
+
 - 2019-09-17:新增去重策略以对抗dns污染和泛解析的问题；修复了BUG等等；
 
 - 2019-09-17:支持自动搜索最快的DNS；支持自动识别CDN；优化爆破过程降低占用；提高速度；更新了界面UI；修复BUG等等，总的来说，本次新增特性较多；

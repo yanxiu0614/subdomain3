@@ -61,6 +61,11 @@ Short Form    | Long Form      | Description
 -f2           | --next_sub_file| next sub dict
 -f3           | --other_file   | subdomain log from search engine
 
+## License
+The MIT License(http://opensource.org/licenses/MIT)
+
+Please feel free to use and contribute to the development.
+
 ## Thanks:
 
 - <a href="https://github.com/smarttang" target="view_window">smarttang(Tangyucong)</a>
@@ -68,6 +73,8 @@ Short Form    | Long Form      | Description
 
 
 ## Changelog:
+- 2020-01-20: Optimize memory usage and strategy,Fixed bug e.g
+
 - 2019-09-22: New strategy to prevent dns cache pollution;Optimize the  processes,Fixed bug e.g
 
 - 2019-09-17: Automatically discover the fastest nameserver support;Determines whether the subdomain  uses CDN storage automatically support;Improve the speed;Optimize the  processes,Fix bug e.g

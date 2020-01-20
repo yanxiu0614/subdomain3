@@ -3,30 +3,27 @@
     author:yanxiu0614@gmail.com
     org:Monster Zero Team
 '''
+from config import config
+from lib.IPy import IP
+from gevent import monkey
+import dns.resolver
+import argparse
+import gevent
 import os
 import sys
-import json
 import time
 import csv
 import random
 import platform
-
+from collections import Counter
 
 if sys.version > '3':
-    from queue import Queue
-    from functools import reduce
+    from queue import Queue, LifoQueue
 else:
-    from Queue import Queue
+    from Queue import Queue, LifoQueue
 
-import gevent
-import argparse
-from gevent import monkey
 
 monkey.patch_all()
-
-import dns.resolver
-from lib.IPy import IP
-from config import config
 
 
 # import logging
@@ -41,12 +38,12 @@ from config import config
 class Brutedomain:
     def __init__(self, args):
         self.target_domain = args.domain
-        self.check_env()
         self.cname_flag = args.cname
         if not (self.target_domain):
             print('usage: brutedns.py -h')
             sys.exit(1)
 
+        self.check_env()
         self.level = args.level
         self.sub_dict = args.sub_file
         self.speed = args.speed
@@ -58,23 +55,22 @@ class Brutedomain:
         self.resolver = dns.resolver.Resolver(configure=self.default_dns)
         self.resolver.lifetime = self.timeout
         self.resolver.timeout = self.timeout
-        
+
         self.found_count = 0
-        self.cmdline=""
-        self.queues = Queue()
+        self.next_found_count = 0
+        self.cmdline = ""
+        self.queues = LifoQueue()
         self.queue_sub = Queue()
         self.cdn_set = set()
         self.cname_set = set()
-        self.white_filter_subdomain=set()
+        self.white_filter_subdomain = set()
         self.cname_block_dict = dict()
         self.ip_block_dict = dict()
         self.ip_all_dict = dict()
         self.ip_flag_dict = dict()
         self.active_ip_dict = dict()
         self.ip_count_dict = dict()
-        self.black_ip_dict=dict()
-        self.ip_subdomain_dict=dict()
-
+        self.black_ip = set()
 
         self.set_next_sub = self.load_next_sub_dict()
         self.set_cdn = self.load_cdn()
@@ -88,11 +84,9 @@ class Brutedomain:
             self.nameservers = self.load_nameservers()
             self.check_nameservers()
 
- 
-
-
     def check_env(self):
-        if (not os.path.exists('result/{domain}'.format(domain=self.target_domain))):
+        if (not os.path.exists(
+                'result/{domain}'.format(domain=self.target_domain))):
             try:
                 os.mkdir('result/{domain}'.format(domain=self.target_domain))
             except Exception as e:
@@ -100,21 +94,27 @@ class Brutedomain:
                 sys.exit(1)
         filename = 'result/{name}/{name}'.format(name=self.target_domain)
         if os.path.isfile(filename + ".csv"):
-            new_filename = filename + "_" + str(os.stat(filename + ".csv").st_mtime).replace(".", "")
+            new_filename = filename + "_" + \
+                str(os.stat(filename + ".csv").st_mtime).replace(".", "")
             os.rename(filename + ".csv", new_filename + ".csv")
         if os.path.isfile(filename + "_deal.csv"):
             if not new_filename:
-                new_filename = filename + "_" + str(os.stat(filename + "_deal.csv").st_mtime).replace(".", "")
+                new_filename = filename + "_" + \
+                    str(os.stat(filename + "_deal.csv").st_mtime).replace(".", "")
             os.rename(filename + "_deal.csv", new_filename + "_deal.csv")
+
+        with open('result/{name}/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['DOMAIN', 'CDN', "CNAME", 'IP'])
 
         if (platform.system() != "Windows"):
             try:
-                self.cmdline="\r\n"
+                self.cmdline = "\r\n"
                 os.system("ulimit -n 65535")
             except Exception:
                 pass
         else:
-            self.cmdline="\r"
+            self.cmdline = "\r"
 
     def load_cdn(self):
         cdn_set = set()
@@ -133,7 +133,8 @@ class Brutedomain:
     def load_sub_dict_to_queue(self):
         with open(self.sub_dict, 'r') as file_sub:
             for sub in file_sub:
-                domain = "{sub}.{target_domain}".format(sub=sub.strip(), target_domain=self.target_domain)
+                domain = "{sub}.{target_domain}".format(
+                    sub=sub.strip(), target_domain=self.target_domain)
                 self.queues.put(domain)
 
     def load_nameservers(self):
@@ -148,8 +149,11 @@ class Brutedomain:
         other_subdomain_list = list()
         if (log_type == str):
             try:
-                subdomain_log = open('{target_domain}'.format(target_domain=self.other_result), 'r')
-                other_result = [subdomain.strip() for subdomain in subdomain_log]
+                subdomain_log = open(
+                    '{target_domain}'.format(
+                        target_domain=self.other_result), 'r')
+                other_result = [subdomain.strip()
+                                for subdomain in subdomain_log]
                 subdomain_log.close()
             except Exception:
                 print('subdomain log is not exist')
@@ -162,14 +166,14 @@ class Brutedomain:
             other_subdomain_list.append(subdomain.strip().strip("."))
         return other_subdomain_list
 
-
     def extract_next_sub_log(self):
         other_subdomain_list = self.load_result_from_other()
         for subdomain in other_subdomain_list:
             if (('.' + str(self.target_domain)) in subdomain):
                 self.queues.put(subdomain)
-            subname = subdomain.strip(".").replace(self.target_domain,"").strip(".")
-            if subname!="":
+            subname = subdomain.strip(".").replace(
+                self.target_domain, "").strip(".")
+            if subname != "":
                 sub_list = subname.split(".")
                 for sub in sub_list:
                     self.set_next_sub.add(sub.strip())
@@ -178,7 +182,12 @@ class Brutedomain:
         print("[+] Seraching fastest nameserver,it will take a few minutes")
         server_info = {}
         i = 0
-        sys.stdout.write(self.cmdline + '[+] Searching nameserver process:' + str(round(i * 100.00 / len(self.nameservers), 2)) + "% ")
+        sys.stdout.write(self.cmdline +
+                         '[+] Searching nameserver process:' +
+                         str(round(i *
+                                   100.00 /
+                                   len(self.nameservers), 2)) +
+                         "% ")
         sys.stdout.flush()
         for nameserver in self.nameservers:
             i = i + 1
@@ -187,22 +196,31 @@ class Brutedomain:
             start = time.time()
             for _ in range(2):
                 random_str = str(random.randint(1, 1000))
-                domain_list = [random_str + "testnamservspeed.com" for _ in range(200)]
-                coroutines = [gevent.spawn(self.query_domain, l) for l in domain_list]
+                domain_list = [random_str +
+                               "testnamservspeed.com" for _ in range(200)]
+                coroutines = [
+                    gevent.spawn(
+                        self.query_domain,
+                        l) for l in domain_list]
                 gevent.joinall(coroutines)
             end = time.time()
             cost = end - start
             server_info[nameserver] = cost
-            sys.stdout.write('\r'+ '[+] Searching nameserver process:' + str(round(i * 100.00 / len(self.nameservers), 2)) + "% ")
+            sys.stdout.write('\r' +
+                             '[+] Searching nameserver process:' +
+                             str(round(i *
+                                       100.00 /
+                                       len(self.nameservers), 2)) +
+                             "% ")
             sys.stdout.flush()
-        nameserver = sorted(server_info.items(), key=lambda server_info: server_info[1])[0][0]
+        nameserver = sorted(server_info.items(),
+                            key=lambda server_info: server_info[1])[0][0]
         print(self.cmdline)
         print("[+] Search completed,fastest nameserver: " + nameserver)
         self.ip_block_dict = dict()
         self.cname_block_dict = dict()
         self.resolver.lifetime = self.timeout
         self.resolver.nameservers = [nameserver]
-
 
     def check_cdn(self, cname_list, domain):
         for cname in cname_list:
@@ -221,7 +239,6 @@ class Brutedomain:
                 return True
             self.cname_set.add(cname)
         return False
-
 
     def get_type_id(self, name):
         return dns.rdatatype.from_text(name)
@@ -243,7 +260,6 @@ class Brutedomain:
         except Exception as e:
             pass
 
-
     def get_block(self):
         domain_list = list()
         if (self.queues.qsize() > self.segment_num):
@@ -253,16 +269,17 @@ class Brutedomain:
             for _ in range(self.queues.qsize()):
                 domain_list.append(self.queues.get())
         return domain_list
-    
+
     def get_black_subdomain(self):
-        temp_list=list()
-        temp_set=set()
+        temp_list = list()
+        temp_set = set()
         for subdomain_list in self.black_ip_dict.values():
             temp_list.extend(subdomain_list)
-        black_subdomain=set(temp_list)-self.white_filter_subdomain
-        for domain in  black_subdomain:
+        black_subdomain = set(temp_list) - self.white_filter_subdomain
+        for domain in black_subdomain:
             for next_sub in self.set_next_sub:
-                subdomain = "{next}.{domain}".format(next=next_sub, domain=domain)
+                subdomain = "{next}.{domain}".format(
+                    next=next_sub, domain=domain)
                 temp_set.add(subdomain)
         return temp_set
 
@@ -275,94 +292,133 @@ class Brutedomain:
             segment_num = config.medium_segment_num
         return segment_num
 
-    
     def generate_sub(self):
         try:
             domain = self.queue_sub.get_nowait()
             for next_sub in self.set_next_sub:
-                subdomain = "{next}.{domain}".format( next=next_sub.strip(), domain=domain)
+                subdomain = "{next}.{domain}".format(
+                    next=next_sub.strip(), domain=domain)
                 self.queues.put_nowait(subdomain)
             return True
         except Exception as e:
             return False
 
+    def filter_black_subdomain(self):
+        temp_set = set()
+        if len(self.white_filter_subdomain) > 0:
+            for _ in range(self.queues.qsize()):
+                EXIST = False
+                domain = self.queues.get_nowait()
+                for black_domain in self.white_filter_subdomain:
+                    if black_domain in domain or black_domain.strip(
+                            ".") == domain:
+                        EXIST = True
+                        continue
+                if not EXIST:
+                    temp_set.add(domain)
+            for domain in temp_set:
+                self.queues.put_nowait(domain)
 
-    def deweighting_subdomain(self):
+            temp_set = set()
+            for _ in range(self.queue_sub.qsize()):
+                EXIST = False
+                domain = self.queue_sub.get_nowait()
+                for black_domain in self.white_filter_subdomain:
+                    if black_domain in domain or black_domain.strip(
+                            ".") == domain:
+                        EXIST = True
+                        continue
+                if not EXIST:
+                    temp_set.add(domain)
+            for domain in temp_set:
+                self.queue_sub.put_nowait(domain)
+            self.white_filter_subdomain = set()
+
+    def deweighting_subdomain(self, REMOVE_FLAG):
         temp_list = list()
         for subdomain, ip_list in self.ip_block_dict.items():
-            ip_str = str(sorted(ip_list))
-            if ip_str not in self.black_ip_dict.keys():
-                if (self.ip_count_dict.__contains__(ip_str)):
-                    self.ip_subdomain_dict[ip_str].append(subdomain)
-                    if (self.ip_count_dict[ip_str] > config.ip_max_count):
-                        temp_list.append(subdomain)
-                    else:
-                        self.ip_count_dict[ip_str] = self.ip_count_dict[ip_str] + 1
-                else:
-                    self.ip_subdomain_dict[ip_str]=[subdomain]
-                    self.ip_count_dict[ip_str] = 1
-
-                for ip in ip_list:
-	                if ip in config.waiting_fliter_ip:
-	                    temp_list.append(subdomain)
-	                if (IP(ip).iptype() != 'PUBLIC' ):
-	                    temp_list.append(subdomain)
-            else:
+            FLAG = False
+            for ip in ip_list:
+                if ip in config.waiting_fliter_ip:
+                    FLAG = True
+                    break
+            if FLAG:
                 temp_list.append(subdomain)
-            
-        
+                continue
+            ip_list.sort()
+            self.ip_block_dict[subdomain] = ip_list
+            if str(ip_list) in self.black_ip:
+                temp_list.append(subdomain)
 
-        for ip_str,count in  self.ip_count_dict.items():
-            if(count>10):
-                i=0
-                subdomain_list=self.ip_subdomain_dict[ip_str]
-                min_subdomain=reduce(lambda x, y: x if len(x) < len(y) else y, subdomain_list)
-                for subdomain in subdomain_list:
-                    if("."+min_subdomain in subdomain):
-                        i=i+1
-                    if(i>10):
-                        self.black_ip_dict[ip_str]=subdomain_list
-                        break
+        if REMOVE_FLAG:
+            all_black_subdomain = []
+            if self.ip_block_dict.__len__() > 0:
+                self.ip_all_dict.update(self.ip_block_dict)
+                all_subdomain_suffix = [subdomain.replace(self.target_domain, "").strip(
+                    ".").split(".")[-1] for subdomain in self.ip_all_dict.keys()]
+                suffix_count_dict = Counter(all_subdomain_suffix)
+                for suffix, count in suffix_count_dict.items():
+                    if count > 6:
+                        subdomain = "." + suffix + "." + self.target_domain
+                        all_black_subdomain.append(subdomain)
+                        self.white_filter_subdomain.add(subdomain)
 
-        for  subdomain_list in self.black_ip_dict.values():
-            temp_list.extend(subdomain_list)
-        
+            if len(all_black_subdomain) > 0:
+                for subdomain, ip_list in self.ip_all_dict.items():
+                    if subdomain in all_black_subdomain:
+                        self.black_ip.add(str(ip_list))
+                        temp_list.append(subdomain)
+                        continue
+                    for black_subdomain in all_black_subdomain:
+                        if black_subdomain in subdomain:
+                            self.black_ip.add(str(ip_list))
+                            temp_list.append(subdomain)
+                            continue
+        else:
+            if self.ip_block_dict.__len__() > 0:
+                for subdomain, ip_list in self.ip_block_dict.items():
+                    ip_str = str(ip_list)
+                    if (self.ip_count_dict.__contains__(ip_str)):
+                        if (self.ip_count_dict[ip_str] > config.ip_max_count):
+                            temp_list.append(subdomain)
+                        else:
+                            self.ip_count_dict[ip_str] = self.ip_count_dict[ip_str] + 1
+                    else:
+                        self.ip_count_dict[ip_str] = 1
+            self.ip_all_dict.update(self.ip_block_dict)
+
         for subdomain in temp_list:
             try:
                 del self.ip_all_dict[subdomain]
             except Exception:
                 pass
             try:
-                del self.cname_block_dict[subdomain]
-                self.white_filter_subdomain.add(subdomain)
-            except Exception:
-                pass
-            try:
                 del self.ip_block_dict[subdomain]
             except Exception:
                 pass
+            try:
+                del self.cname_block_dict[subdomain]
+            except Exception:
+                pass
 
-        self.found_count = self.ip_all_dict.__len__()
-        self.ip_all_dict.update(self.ip_block_dict)
-        
+        if REMOVE_FLAG:
+            self.found_count = self.ip_block_dict.__len__() + self.found_count
+        else:
+            self.found_count = self.ip_all_dict.__len__() + self.next_found_count
+
         for subdomain, ip_list in self.ip_block_dict.items():
             if (subdomain.count(".") < self.level):
                 self.queue_sub.put(subdomain)
         self.ip_block_dict.clear()
 
-    
     def handle_data(self):
-        for subdomain, cname_list in self.cname_block_dict.items():
-            if (self.check_cdn(cname_list, self.target_domain)):
-                cname_list.append("Yes")
-            else:
-                cname_list.append("No")
-            self.cname_block_dict[subdomain] = cname_list
+        self.next_found_count = self.found_count
         for subdomain, ip_list in self.ip_all_dict.items():
             for ip in ip_list:
-                iptype=IP(ip).iptype()
+                iptype = IP(ip).iptype()
                 if (iptype != 'PUBLIC'):
-                    self.ip_all_dict[subdomain] = "{iptype}({ip})".format(iptype=iptype,ip=ip)
+                    self.ip_all_dict[subdomain] = "{iptype}({ip})".format(
+                        iptype=iptype, ip=ip)
                 else:
                     try:
                         key_yes = self.cname_block_dict[subdomain][-1]
@@ -384,11 +440,11 @@ class Brutedomain:
                         self.active_ip_dict[CIP] = active_ip_list
 
     def raw_write_disk(self):
-        if (not os.path.exists('result/{domain}'.format(domain=self.target_domain))):
+        if (not os.path.exists(
+                'result/{domain}'.format(domain=self.target_domain))):
             os.mkdir('result/{domain}'.format(domain=self.target_domain))
         with open('result/{name}/{name}.csv'.format(name=self.target_domain), 'a') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['DOMAIN', 'CDN', "CNAME", 'IP'])
             for subdomain, ip_list in self.ip_all_dict.items():
                 try:
                     flag = self.dict_cname_all[subdomain].pop()
@@ -409,52 +465,72 @@ class Brutedomain:
             writer = csv.writer(csvfile)
             writer.writerow(['IP', 'frequency', 'active'])
             for ip_frequency in ip_flags:
-                writer.writerow([ip_frequency[0], ip_frequency[1], self.active_ip_dict[ip_frequency[0]]])
+                writer.writerow([ip_frequency[0], ip_frequency[1],
+                                 self.active_ip_dict[ip_frequency[0]]])
 
     def collect_cname(self):
         with open('result/cname.txt', 'a') as txt:
             for cname in self.cname_set:
-                flag=False
+                flag = False
                 for cdn in self.set_cdn:
                     if(cdn in cname or self.target_domain in cname):
-                        flag=True
-                if(flag==False):
-                    txt.write('{cname}'.format(cname=cname.strip())+self.cmdline)
+                        flag = True
+                if(flag == False):
+                    txt.write(
+                        '{cname}'.format(
+                            cname=cname.strip()) +
+                        self.cmdline)
         with open('result/cdn.txt', 'a') as txt:
             for cdn in self.cdn_set:
-                txt.write('{cname}'.format(cname=cdn)+self.cmdline)
+                txt.write('{cname}'.format(cname=cdn) + self.cmdline)
 
     def cmd_print(self, wait_size, start, end, i):
         scaned = self.segment_num * i
         cost = end - start
         sys.stdout.write(
-                "\r"+ "[+] Bruting subdomain process domain: {domain} |scaned: {scaned}|found: {found_count} |speed:{velocity} |spend: {spend} min ".format(
+            "\r" +
+            "[+] Bruting subdomain process domain: {domain} |scaned: {scaned}|found: {found_count} |speed:{velocity} |spend: {spend} min ".format(
                 domain=self.target_domain,
                 scaned=scaned,
                 qsize=wait_size,
                 found_count=self.found_count,
-                velocity=round(scaned / cost, 1),
-                spend=round(cost / 60, 1)))
+                velocity=round(
+                    scaned /
+                    cost,
+                    1),
+                spend=round(
+                    cost /
+                    60,
+                    1)))
         sys.stdout.flush()
 
     def run(self):
         start = time.time()
         print("[+] Begin to brute domain")
         i = 0
-        while not self.queues.empty() or not self.queue_sub.empty():          
+        REMOVE_FLAG = False
+        while not self.queues.empty() or not self.queue_sub.empty():
             i = i + 1
-            domain_list = set(self.get_block())-self.get_black_subdomain()
-            coroutines = [gevent.spawn(self.query_domain, l) for l in domain_list]
+            if REMOVE_FLAG:
+                self.filter_black_subdomain()
+            domain_list = self.get_block()
+            coroutines = [gevent.spawn(self.query_domain, l)
+                          for l in domain_list]
             try:
                 gevent.joinall(coroutines)
             except KeyboardInterrupt:
                 print('user stop')
                 sys.exit(1)
 
-            self.deweighting_subdomain()
+            self.deweighting_subdomain(REMOVE_FLAG)
             self.cmd_print(self.queues.qsize(), start, time.time(), i)
 
-            if (self.queues.qsize() < 30000 and self.queue_sub.qsize()>0):
+            if not REMOVE_FLAG:
+                self.handle_data()
+                self.raw_write_disk()
+
+            if (self.queues.qsize() < 30000 and self.queue_sub.qsize() > 0):
+                REMOVE_FLAG = True
                 while (self.queues.qsize() < 200000):
                     if not self.generate_sub():
                         break
@@ -482,18 +558,24 @@ if __name__ == '__main__':
         help="example: 1,hello.baidu.com;2,hello.world.baidu.com")
     parser.add_argument("-f", "--file",
                         help="One domain each line")
-    parser.add_argument("-ns", "--default_dns", default='n',
-                        help="If you want use default dns,set it y,otherwise set n(It will automatically discover the fastest nameserver) ")
-    parser.add_argument("-c", "--cname",
-                        help="Collect cname of subdomain and save to result/cname.txt,you can add it to cdn.txt when you find it is cdn ,y or n",
-                        default='y')
+    parser.add_argument(
+        "-ns",
+        "--default_dns",
+        default='n',
+        help="If you want use default dns,set it y,otherwise set n(It will automatically discover the fastest nameserver) ")
+    parser.add_argument(
+        "-c",
+        "--cname",
+        help="Collect cname of subdomain and save to result/cname.txt,you can add it to cdn.txt when you find it is cdn ,y or n",
+        default='y')
     parser.add_argument("-f1", "--sub_file",
                         help="sub dict", default='dict/sub_full.txt')
     parser.add_argument("-f2", "--next_sub_file",
                         help="next_sub dict", default='dict/next_sub_full.txt')
-    parser.add_argument("-f3", "--other_file",
-                        help="Subdomain log from other tools,such as search engine")
-
+    parser.add_argument(
+        "-f3",
+        "--other_file",
+        help="Subdomain log from other tools,such as search engine")
 
     def banner():
         print("""
@@ -505,7 +587,6 @@ if __name__ == '__main__':
                |___/\__,_|_.__/ \__,_|\___/|_| |_| |_|\__,_|_|_| |_|____/ 
                 Coded By yanxiu (V3.0 RELEASE) email:yanxiu0614@gmail.com
                 """)
-
 
     args = parser.parse_args()
     file_name = args.file
@@ -526,4 +607,3 @@ if __name__ == '__main__':
                 brute.collect_cname()
         except KeyboardInterrupt:
             print('user stop')
-

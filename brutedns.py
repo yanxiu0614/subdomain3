@@ -3,12 +3,6 @@
     author:yanxiu0614@gmail.com
     org:Monster Zero Team
 '''
-from config import config
-from lib.IPy import IP
-from gevent import monkey
-import dns.resolver
-import argparse
-import gevent
 import os
 import sys
 import time
@@ -16,6 +10,15 @@ import csv
 import random
 import platform
 from collections import Counter
+
+
+import argparse
+import gevent
+import dns.resolver
+
+from config import config
+from lib.IPy import IP
+from gevent import monkey
 
 if sys.version > '3':
     from queue import Queue, LifoQueue

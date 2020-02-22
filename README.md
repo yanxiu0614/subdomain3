@@ -43,6 +43,8 @@ Discover the fastest nameserver;The strategy of dynamically adjusting of dict by
 ```
 git clone https://github.com/yanxiu0614/subdomain3.git
 
+cd subdomain3
+
 pip install -r requirement.txt
 
 python2/3 brutedns.py -d tagetdomain -s high -l 5
